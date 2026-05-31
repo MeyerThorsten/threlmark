@@ -49,7 +49,9 @@ The root is *home-based, not repo-relative*, on purpose — it's a shared hub th
 | **Item** | A roadmap card: title, category, 4 scores, description, target files, acceptance criteria. One file each. |
 | **Lane / status** | `idea → ranked → development → done`. The lane *is* the item's `status`. |
 | **Priority** | Computed, never stored: `max(0, round(impact·3 + evidence·2 + fit·2 − effort·1.5))`. |
-| **Suggestion** | A drop-zone JSON another tool writes into `projects/<id>/suggestions/`. Surfaces in the **Inbox**. |
+| **Suggestion** | A drop-zone JSON another tool writes into `projects/<id>/suggestions/`. Surfaces in the **Inbox**. GitHub issue/project import lands here too. |
+| **Comment / decision** | An append-only note on an item (`kind: comment` or `decision`), stored under `projects/<id>/comments/<itemId>/`. |
+| **Due / scheduled** | Optional `dueDate` and `scheduledFor` (`YYYY-MM-DD`) on an item. A past `dueDate` on an unfinished card is **overdue**. |
 | **Portfolio** | Cross-project ranking of every item by status-weighted priority. |
 | **Shared item** | One canonical card referenced by several projects (refactor duplicated work). |
 | **Link** | A cross-project dependency edge (`blocks` / `relates` / `duplicates`). |
@@ -103,6 +105,7 @@ Disk is the source of truth. External tools may read/write these exact shapes (a
     project.json                 # project metadata + wipLimits + lanePolicies
     board.json                   # lane ordering { lanes: { idea:[ids], ranked, development, done } }
     items/<itemId>.json          # ONE roadmap card per file (source of truth)
+    comments/<itemId>/<cId>.json # append-only comment / decision notes on an item
     suggestions/<sugId>.json     # external-tool drop zone (the Inbox)
     suggestions/.dismissed/      # dismissed/accepted suggestions (audit)
     handoffs/<handoffId>.json    # recorded agent handoffs (brief → shipped)
@@ -131,7 +134,9 @@ Disk is the source of truth. External tools may read/write these exact shapes (a
 | `files` | string | comma-separated target files |
 | `acceptance` | string[] | acceptance criteria |
 | `labels` | string[]? | free-form tags for filtering/grouping cards |
-| `source` | string? | producing tool when accepted from a suggestion, e.g. `"ideaclyst"` |
+| `dueDate` | string? | `YYYY-MM-DD`; past + not `done` ⇒ overdue |
+| `scheduledFor` | string? | `YYYY-MM-DD` planned start |
+| `source` | string? | producing tool when accepted from a suggestion, e.g. `"ideaclyst"` (or `"trello"` / `"github"` on import) |
 | `sharedRef` | string? | `"shared/<itemId>"` if this is a pointer to a shared item |
 | `transitions` | `{to,at}[]` | append-only lane history (seeded from `createdAt` for legacy items) |
 | `handoff` | `{handoffId,agent,at}`? | set when handed to an agent via a brief |
@@ -159,13 +164,14 @@ The UI and external tools call the same store functions through these routes.
 | `GET` / `POST` | `/api/projects` | list / create |
 | `GET` `PATCH` `DELETE` | `/api/projects/:id` | get / update / archive |
 | `GET` / `POST` | `/api/projects/:id/items` | list (with computed priority) / create |
-| `GET` `PATCH` `DELETE` | `/api/projects/:id/items/:itemId` | get / update / delete |
+| `GET` `PATCH` `DELETE` | `/api/projects/:id/items/:itemId` | get / update / delete (incl. `dueDate`, `scheduledFor`) |
 | `POST` | `/api/projects/:id/items/:itemId/move` | `{toLane,toIndex}` (lane) or `{toProjectId}` (cross-project move) |
+| `GET` / `POST` | `/api/projects/:id/items/:itemId/comments` | list / append a `{kind,body,author?}` comment or decision note |
 | `GET` `PATCH` | `/api/projects/:id/board` | read / persist lane order |
-| `GET` | `/api/projects/:id/suggestions` | the Inbox |
+| `GET` / `POST` | `/api/projects/:id/suggestions` | the Inbox / import GitHub issues (`{source:"github", repo+token}` or `{githubJson}`) |
 | `POST` | `/api/projects/:id/suggestions/:sugId/accept` | `{targetProjectId?}` → item |
 | `POST` | `/api/projects/:id/suggestions/:sugId/dismiss` | → `.dismissed/` |
-| `POST` | `/api/projects/:id/import` | `{roadmapHtml}` or `{path}` |
+| `POST` | `/api/projects/:id/import` | `{format:"roadmap"\|"trello"}` + `{roadmapHtml\|trelloJson\|path}` |
 | `POST` | `/api/projects/:id/handoff` | `{itemIds, format}` (+ `record, agent, moveToDevelopment` to log a handoff) |
 | `GET` | `/api/projects/:id/handoffs` | recorded handoffs |
 | `POST` | `/api/projects/:id/items/:itemId/report` | agent report-back `{agent, status, summary, verification?}` (`done` auto-moves to Done) |
@@ -193,14 +199,18 @@ JSON
 - **Multi-project** — create / list / archive / switch projects; cross-project Portfolio.
 - **Per-project kanban** — four lanes, drag-between-lanes, 4-axis scoring + computed priority, categories.
 - **Labels & filters** — tag items/suggestions with free-form labels, filter a board by label, and carry labels into handoff briefs.
+- **Due dates & scheduling** — give an item a `scheduledFor` start and a `dueDate`; the board flags **overdue** cards (and the Flow view counts them) until they reach Done.
+- **Comments & decision notes** — append-only notes on any item, typed as a plain *comment* or a *decision* record, kept on disk alongside the card.
+- **Activity timeline** — every item detail shows a derived history (created, lane moves, handoff, reports, comments) so the trail of work is always visible.
 - **Roadmap Lab workflow** — search, category filter, *Rank by score*, *Push top 3*, inline Add Item, on-card sliders, card selection → live Queue/Markdown/JSON brief, *Copy dev brief*.
-- **Import** — read the original `roadmap.html` `defaults` array (idempotent).
+- **Import** — pull in an existing roadmap three ways: the original `roadmap.html` `defaults` array, a **Trello** board export (lists → lanes, labels, due dates, checklists → acceptance), or **GitHub** issues/projects (live via the API or pasted JSON) into the Inbox. All idempotent — re-import updates by stable source id instead of duplicating.
 - **Handoff** — export selected items as file-scoped Claude/Codex prompts with acceptance checkboxes + verification commands, or as Markdown/JSON.
 - **Inbox** — surface `suggestions/<id>.json`, accept (→ item with `source`) or dismiss; cross-project promote.
 - **Cross-project** — move items between projects, link/depend, share one item across projects.
 - **Flow** — WIP limits per lane, work-item-age / stale badges, a **Flow** tab (throughput, cycle time, aging) and a portfolio flow strip.
 - **Agent flow** — record handoffs to Claude/Codex and track brief → shipped, agent throughput, and stalled briefs.
 - **Agent report-back** — briefs instruct the agent to report status automatically; a `done` report auto-moves the card to Done with a live toast (closed loop, no manual step).
+- **Dark mode** — a light/dark theme toggle in the sidebar; the choice is remembered locally and applied before first paint (no flash).
 - **Local-first** — no cloud, no accounts, no secrets.
 
 ---
@@ -208,12 +218,12 @@ JSON
 ## Project layout
 
 ```
-src/lib/         fsops, paths, ids, priority, flow, metrics, schema/{types,version,normalize}
-                 projects/ items/ board/ suggestions/ links/ shared/ stores
-                 importer/roadmap-html, handoff/{generate,records}, portfolio, markdown
+src/lib/         fsops, paths, ids, priority, flow, metrics, activity, schema/{types,version,normalize}
+                 projects/ items/ board/ suggestions/ comments/ links/ shared/ stores
+                 importer/{roadmap-html,trello,github}, handoff/{generate,records}, portfolio, markdown
 src/app/         portfolio (/), projects/[id] (board, flow, inbox, handoff, import),
-                 import, shared, projects/new, api/** route handlers (incl. flow, handoffs)
-src/components/  sidebar, roadmap-workspace, item-editor, inbox-list, flow-panel,
+                 import, shared, projects/new, api/** route handlers (incl. flow, handoffs, comments)
+src/components/  sidebar, theme-toggle, roadmap-workspace, item-editor, inbox-list, flow-panel,
                  portfolio-flow, project-settings, links-manager, import-form,
                  handoff-panel, project-nav
 docs/            documentation (README.html, threlmark-docs.html, HOSTING.html/md)
