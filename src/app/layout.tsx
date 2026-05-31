@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { listProjects } from "@/lib/projects/store";
 import { listItems } from "@/lib/items/io";
 import { countSuggestions } from "@/lib/suggestions/store";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
-const mono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
+// Self-contained font stack (no Google Fonts fetch at build time) — the font
+// families are defined in globals.css with system fallbacks, so the app builds
+// and runs fully offline. DSGVO-clean and resilient to network issues.
 
 export const metadata: Metadata = {
   title: "Threlmark — project & roadmap command deck",
@@ -31,7 +31,7 @@ export default async function RootLayout({
   );
 
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+    <html lang="en">
       <body>
         <div className="shell">
           <Sidebar projects={nav} />
