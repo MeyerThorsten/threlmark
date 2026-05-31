@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Threlmark — Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#f4f6f8;--surface:#fff;--soft:#eef2f7;--border:#d9dee7;--bb:#cfd6e1;
+    --text:#16181d;--strong:#0b0d12;--muted:#667085;--faint:#98a2b3;
+    --navy:#111827;--indigo:#4f46e5;--indigo2:#6366f1;--teal:#0f766e;--gold:#b45309;--rose:#be123c;--green:#15803d;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:"Inter",system-ui,sans-serif;
+    --shadow:0 10px 26px rgba(15,23,42,.06);--shadow-lg:0 24px 60px rgba(15,23,42,.12);--r:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--ui);color:var(--text);line-height:1.6;
+    background:radial-gradient(circle at 16% -4%,rgba(79,70,229,.12),transparent 32rem),linear-gradient(180deg,#fbfcff,var(--ink) 26rem);}
+  a{color:var(--indigo);text-decoration:none}a:hover{text-decoration:underline}
+  .wrap{display:grid;grid-template-columns:240px 1fr;max-width:1280px;margin:0 auto;gap:0;min-height:100vh}
+  /* sidebar */
+  nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:26px 16px;border-right:1px solid var(--border);background:rgba(255,255,255,.7);backdrop-filter:blur(10px)}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .brand svg{width:30px;height:30px;color:var(--indigo)}
+  .brand b{font-size:19px;font-weight:900;letter-spacing:-.03em;color:var(--strong)}
+  .brand span{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint)}
+  nav.toc a{display:block;padding:6px 10px;border-radius:8px;color:var(--muted);font-size:13.5px;font-weight:600}
+  nav.toc a:hover{background:var(--soft);color:var(--text);text-decoration:none}
+  nav.toc .grp{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:800;margin:16px 10px 4px}
+  main{padding:42px 48px 80px;min-width:0}
+  h1{font-size:clamp(2.4rem,5vw,3.6rem);line-height:1;font-weight:900;letter-spacing:-.03em;color:var(--strong);margin:0}
+  h2{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;color:var(--strong);margin:54px 0 14px;padding-top:14px;border-top:1px solid var(--border)}
+  h3{font-size:1.12rem;font-weight:800;color:var(--strong);margin:26px 0 10px}
+  p{margin:12px 0;max-width:74ch}
+  .lede{font-size:1.15rem;color:var(--muted);max-width:70ch;margin-top:16px}
+  .kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--indigo);font-weight:800}
+  code{font-family:var(--mono);font-size:.86em;background:var(--soft);padding:1px 6px;border-radius:6px;color:#3b3f95}
+  pre{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:#0f172a;color:#e2e8f0;border-radius:12px;padding:16px 18px;overflow:auto;border:1px solid var(--border)}
+  pre .c{color:#94a3b8}pre .k{color:#c7d2fe}pre .s{color:#86efac}
+  .card{background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:22px}
+  .grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:800;padding:9px 10px;border-bottom:1px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:hover td{background:#f8fafc}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:750;padding:3px 9px;border-radius:999px;border:1px solid var(--bb);background:#f8fafc;color:#475467}
+  .pill.idea{color:#0369a1;background:#eff6ff;border-color:#bfdbfe}
+  .pill.rank{color:var(--gold);background:#fffbeb;border-color:#fde68a}
+  .pill.dev{color:var(--indigo);background:#eef2ff;border-color:#c7d2fe}
+  .pill.done{color:var(--green);background:#ecfdf5;border-color:#b6e8ca}
+  .metric{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff;box-shadow:var(--shadow)}
+  .metric b{display:block;font-size:1.9rem;font-weight:900;line-height:1;color:var(--strong)}
+  .metric span{display:block;margin-top:6px;font-size:.8rem;color:var(--muted);font-weight:600}
+  .chartbox{position:relative;height:280px}
+  .note{border-left:3px solid var(--indigo);background:#f5f3ff;border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;color:#3730a3;font-size:14px}
+  .formula{font-family:var(--mono);font-size:15px;background:var(--navy);color:#e2e8f0;border-radius:12px;padding:18px;text-align:center;letter-spacing:.02em}
+  .formula b{color:#a5b4fc}
+  footer{grid-column:1 / -1;border-top:1px solid var(--border);padding:24px 48px;color:var(--muted);font-size:13px;text-align:center;background:rgba(255,255,255,.6)}
+  svg .lbl{font:600 12px var(--ui);fill:var(--strong)}
+  svg .sub{font:500 10px var(--mono);fill:var(--muted)}
+  svg .edge{stroke:var(--bb);stroke-width:1.6;fill:none}
+  svg .edge-a{stroke:var(--indigo);stroke-width:1.8;fill:none}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border)}main{padding:28px 20px}.g2,.g3,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="toc">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.5" opacity=".5"/><path d="M16 5 L25 22 H7 Z" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="17" r="2.6" fill="currentColor"/><path d="M16 1.5V5M16 27v3.5M1.5 16H5M27 16h3.5" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div><b>Threlmark</b><span>documentation</span></div>
+    </div>
+    <a href="#overview">Overview</a>
+    <a href="#concepts">Core concepts</a>
+    <div class="grp">Architecture</div>
+    <a href="#architecture">System architecture</a>
+    <a href="#contract">Data contract</a>
+    <a href="#disktree">Disk layout</a>
+    <div class="grp">Logic</div>
+    <a href="#scoring">Scoring & priority</a>
+    <a href="#portfolio">Portfolio ranking</a>
+    <a href="#flow">Flow & agent throughput</a>
+    <a href="#crossproject">Cross-project model</a>
+    <div class="grp">Reference</div>
+    <a href="#api">REST API</a>
+    <a href="#workflows">Key workflows</a>
+    <a href="#localfirst">Local-first</a>
+    <a href="#ecosystem">Threlmark + IdeaClyst</a>
+  </nav>
+
+  <main>
+    <header>
+      <div class="kicker">Project &amp; roadmap command deck</div>
+      <h1>Threlmark</h1>
+      <p class="lede">A local-first hub that manages all your projects in one place and runs a ranked, kanban-style roadmap for each — with the data stored as plain JSON on disk so your other tools can read a project's roadmap and write suggestions back into it.</p>
+    </header>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Threlmark generalizes a single-product roadmap (the localStorage <em>Roadmap Lab</em> kanban) into a multi-project hub. Every app you build becomes a <strong>project</strong> with its own scored kanban; a cross-project <strong>Portfolio</strong> ranks what matters across all of them; an <strong>Inbox</strong> surfaces suggestions other tools drop in; and <strong>handoff briefs</strong> turn selected cards into Claude/Codex implementation prompts.</p>
+      <div class="grid g4" style="margin-top:18px">
+        <div class="metric"><b>0</b><span>Databases</span></div>
+        <div class="metric"><b>JSON</b><span>Only state, on disk</span></div>
+        <div class="metric"><b>1</b><span>Path: UI + tools share the store</span></div>
+        <div class="metric"><b>4</b><span>Lanes per roadmap</span></div>
+      </div>
+      <div class="note">Built with Next.js (App Router) + TypeScript. No database, no cloud, no accounts. Disk JSON under <code>~/.threlmark</code> is the single source of truth.</div>
+    </section>
+
+    <section id="concepts">
+      <h2>Core concepts</h2>
+      <table>
+        <tr><th>Concept</th><th>What it is</th></tr>
+        <tr><td><strong>Project</strong></td><td>One app/product with its own kanban roadmap. Lives at <code>projects/&lt;id&gt;/</code>.</td></tr>
+        <tr><td><strong>Item</strong></td><td>A roadmap card: title, category, four 1–5 scores, description, target files, acceptance criteria. One JSON file each.</td></tr>
+        <tr><td><strong>Lane / status</strong></td><td><span class="pill idea">Ideas</span> <span class="pill rank">Ranked</span> <span class="pill dev">Development</span> <span class="pill done">Done</span> — the lane <em>is</em> the item's status.</td></tr>
+        <tr><td><strong>Priority</strong></td><td>Computed, never stored — keeps it from drifting from the scores.</td></tr>
+        <tr><td><strong>Suggestion</strong></td><td>A JSON another tool drops into <code>projects/&lt;id&gt;/suggestions/</code>; surfaces in the Inbox.</td></tr>
+        <tr><td><strong>Portfolio</strong></td><td>Cross-project ranking by status-weighted priority.</td></tr>
+        <tr><td><strong>Shared item</strong></td><td>One canonical card referenced by several projects.</td></tr>
+        <tr><td><strong>Link</strong></td><td>A cross-project dependency edge: <code>blocks</code> / <code>relates</code> / <code>duplicates</code>.</td></tr>
+        <tr><td><strong>Flow</strong></td><td>Items record lane <code>transitions[]</code> → measurable age, cycle time, throughput; lanes can carry WIP limits.</td></tr>
+        <tr><td><strong>Handoff (agent flow)</strong></td><td>A recorded handoff stamps items with <code>handoff:{agent}</code>; the Flow view tracks brief → shipped, agent throughput, stalled briefs.</td></tr>
+      </table>
+    </section>
+
+    <section id="architecture">
+      <h2>System architecture</h2>
+      <p>The UI (server components) and external tools both reach the same store functions — one through React, one through the REST API. Stores read and write JSON files atomically. There is no in-memory state, so everything survives a restart.</p>
+      <div class="card">
+        <svg viewBox="0 0 860 360" width="100%" role="img" aria-label="Architecture diagram">
+          <!-- columns -->
+          <rect x="20" y="40" width="220" height="120" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="130" y="64" text-anchor="middle" class="lbl">Threlmark UI</text>
+          <text x="130" y="84" text-anchor="middle" class="sub">Next.js App Router</text>
+          <text x="130" y="108" text-anchor="middle" class="sub">Portfolio · Kanban</text>
+          <text x="130" y="124" text-anchor="middle" class="sub">Inbox · Handoff</text>
+
+          <rect x="20" y="210" width="220" height="110" rx="12" fill="#ecfdf5" stroke="#b6e8ca"/>
+          <text x="130" y="236" text-anchor="middle" class="lbl">Your other apps</text>
+          <text x="130" y="256" text-anchor="middle" class="sub">IdeaClyst · ChannelHelm…</text>
+          <text x="130" y="278" text-anchor="middle" class="sub">read roadmap · drop</text>
+          <text x="130" y="293" text-anchor="middle" class="sub">suggestions</text>
+
+          <rect x="330" y="120" width="200" height="120" rx="12" fill="#fff" stroke="#cfd6e1"/>
+          <text x="430" y="150" text-anchor="middle" class="lbl">src/lib stores</text>
+          <text x="430" y="172" text-anchor="middle" class="sub">projects · items · board</text>
+          <text x="430" y="188" text-anchor="middle" class="sub">suggestions · links · shared</text>
+          <text x="430" y="210" text-anchor="middle" class="sub">atomic write · read-merge</text>
+
+          <rect x="620" y="120" width="220" height="120" rx="12" fill="#111827"/>
+          <text x="730" y="150" text-anchor="middle" class="lbl" style="fill:#fff">~/.threlmark</text>
+          <text x="730" y="172" text-anchor="middle" class="sub" style="fill:#94a3b8">projects/&lt;id&gt;/items/*.json</text>
+          <text x="730" y="190" text-anchor="middle" class="sub" style="fill:#94a3b8">board · suggestions</text>
+          <text x="730" y="212" text-anchor="middle" class="sub" style="fill:#94a3b8">links · shared</text>
+
+          <!-- REST API node -->
+          <rect x="330" y="40" width="200" height="46" rx="10" fill="#f8fafc" stroke="#cfd6e1"/>
+          <text x="430" y="68" text-anchor="middle" class="lbl">REST API · /api/**</text>
+
+          <!-- edges -->
+          <path class="edge-a" d="M240 86 H300 V63 H330"/>
+          <path class="edge-a" d="M240 100 H300 V160 H330" marker-end="url(#arr)"/>
+          <path class="edge" d="M240 250 H285 V63 H330" marker-end="url(#arr)"/>
+          <path class="edge" d="M240 270 H300 V180 H620 V190" marker-end="url(#arr)" opacity=".0"/>
+          <path class="edge-a" d="M530 63 H560 V160 H540" />
+          <path class="edge-a" d="M530 180 H620" marker-end="url(#arr)"/>
+          <path class="edge" d="M285 250 H285 V250 H320 M240 250 H300" />
+          <defs><marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#9aa4b2"/></marker></defs>
+          <text x="285" y="334" text-anchor="middle" class="sub">apps also write items/ &amp; suggestions/ directly →</text>
+          <path class="edge" d="M240 300 H730 V240" marker-end="url(#arr)" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+      <h3>Persistence discipline</h3>
+      <p>Every entity is a JSON file that is its own source of truth. Writes go to a temp file then <code>rename</code> over the target (atomic on one filesystem), so a crash mid-write can never truncate the file. Updates read the current file, spread-merge the patch, preserve <code>id</code>/<code>createdAt</code>, bump <code>updatedAt</code>, and preserve unknown keys for forward-compatibility.</p>
+    </section>
+
+    <section id="contract">
+      <h2>The shared data contract</h2>
+      <p>Disk is the source of truth. External tools may read/write these exact shapes. The schema is versioned (<code>schemaVersion</code>) with lazy, per-file migration.</p>
+
+      <h3>items/&lt;itemId&gt;.json</h3>
+      <table>
+        <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+        <tr><td><code>id</code>, <code>projectId</code></td><td>string</td><td>id preserved on update</td></tr>
+        <tr><td><code>title</code></td><td>string</td><td></td></tr>
+        <tr><td><code>category</code></td><td>enum</td><td>Research, Discovery, Reports, Trends, Validation, Build, Distribution, Operations, UX, Automation</td></tr>
+        <tr><td><code>status</code></td><td>enum</td><td><code>idea</code> · <code>ranked</code> · <code>development</code> · <code>done</code></td></tr>
+        <tr><td><code>impact</code> / <code>evidence</code> / <code>fit</code> / <code>effort</code></td><td>int 1–5</td><td>the four scoring axes</td></tr>
+        <tr><td><code>description</code></td><td>string</td><td></td></tr>
+        <tr><td><code>files</code></td><td>string</td><td>comma-separated target files</td></tr>
+        <tr><td><code>acceptance</code></td><td>string[]</td><td>acceptance criteria</td></tr>
+        <tr><td><code>source</code></td><td>string?</td><td>producing tool when accepted from a suggestion</td></tr>
+        <tr><td><code>sharedRef</code></td><td>string?</td><td><code>"shared/&lt;itemId&gt;"</code> pointer</td></tr>
+        <tr><td><code>transitions</code></td><td>{to,at}[]</td><td>append-only lane history (powers age / cycle time / throughput)</td></tr>
+        <tr><td><code>handoff</code></td><td>{handoffId,agent,at}?</td><td>set when handed to an agent via a brief</td></tr>
+        <tr><td><code>reports</code></td><td>{at,agent,status,summary,…}[]?</td><td>agent report-back log (a <code>done</code> report auto-moves to Done)</td></tr>
+      </table>
+      <p><code>priority</code> is <strong>never stored</strong> — it is computed on read. Current <code>schemaVersion</code> is <strong>2</strong>; legacy v1 items (no <code>transitions</code>) are migrated on read by seeding one from <code>createdAt</code>. <code>project.json</code> may also carry <code>wipLimits</code> and <code>lanePolicies</code>.</p>
+
+      <h3>suggestions/&lt;sugId&gt;.json — what a tool writes</h3>
+      <p>Only <code>source</code> and <code>title</code> are required; everything else defaults on read. <code>targetProjectId</code> makes <em>accept</em> promote the item into a different project.</p>
+      <pre><span class="c">// the minimal valid suggestion</span>
+{ <span class="k">"source"</span>: <span class="s">"ideaclyst"</span>, <span class="k">"title"</span>: <span class="s">"Add competitor price-drop alerts"</span> }</pre>
+    </section>
+
+    <section id="disktree">
+      <h2>Disk layout</h2>
+      <p>Per-item files (not one monolithic <code>roadmap.json</code>) let external tools write concurrently without clobbering a shared array. <code>board.json</code> self-heals on read: any item present in <code>items/</code> but missing from its status lane is appended; orphan ids are dropped.</p>
+      <pre>~/.threlmark/
+├─ threlmark.json                 <span class="c"># manifest { schemaVersion }</span>
+├─ links.json                     <span class="c"># cross-project dependency graph</span>
+├─ projects/
+│  └─ &lt;projectId&gt;/
+│     ├─ project.json             <span class="c"># project metadata</span>
+│     ├─ board.json               <span class="c"># lane ordering (self-healing)</span>
+│     ├─ items/&lt;itemId&gt;.json      <span class="c"># card + transitions[] + handoff ✦</span>
+│     ├─ suggestions/&lt;id&gt;.json    <span class="c"># external drop zone = the Inbox ✦</span>
+│     ├─ suggestions/.dismissed/  <span class="c"># accepted/dismissed (audit)</span>
+│     ├─ handoffs/&lt;id&gt;.json       <span class="c"># recorded agent handoffs</span>
+│     ├─ reports/&lt;file&gt;.json      <span class="c"># agent report-back (ingested on read)</span>
+│     └─ ROADMAP.md               <span class="c"># regenerated human mirror</span>
+├─ shared/items/&lt;itemId&gt;.json     <span class="c"># shared across projects</span>
+└─ archive/projects/&lt;projectId&gt;/  <span class="c"># archived (still readable)</span></pre>
+      <div class="note">✦ External tools only ever need to write <code>items/</code> and <code>suggestions/</code>. They never touch <code>board.json</code> or <code>links.json</code> — those self-reconcile.</div>
+    </section>
+
+    <section id="scoring">
+      <h2>Scoring &amp; priority</h2>
+      <p>Each item is scored 1–5 on four axes. Priority is a single computed number, reused verbatim from the original Roadmap Lab so imported cards rank identically.</p>
+      <div class="formula">priority = max(0, round(<b>impact·3</b> + <b>evidence·2</b> + <b>fit·2</b> − <b>effort·1.5</b>))</div>
+      <div class="grid g2" style="margin-top:18px">
+        <div class="card"><h3 style="margin-top:0">Axis weights</h3><div class="chartbox"><canvas id="weights"></canvas></div></div>
+        <div class="card"><h3 style="margin-top:0">Worked example</h3>
+          <p style="margin-top:4px">A card scored impact 5, evidence 5, fit 5, effort 4:</p>
+          <pre>5·3 + 5·2 + 5·2 − 4·1.5
+= 15 + 10 + 10 − 6
+= <span class="s">29</span></pre>
+          <p class="sub" style="font-family:var(--ui);color:var(--muted)">Impact is weighted heaviest; effort is the only axis that reduces priority.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="portfolio">
+      <h2>Portfolio ranking</h2>
+      <p>Across all active projects, items are ranked by a <strong>status-weighted</strong> score, so in-flight work rises to the top of the whole portfolio. Items that block others get a small bottleneck boost.</p>
+      <div class="formula">score = priority · statusWeight &nbsp; (+ 0.1 · blockedCount · priority)</div>
+      <div class="grid g2" style="margin-top:18px">
+        <div class="card"><h3 style="margin-top:0">Status weights</h3><div class="chartbox"><canvas id="statusw"></canvas></div></div>
+        <div class="card"><h3 style="margin-top:0">Example lane distribution</h3><div class="chartbox"><canvas id="lanes"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="flow">
+      <h2>Flow &amp; agent throughput</h2>
+      <p>The board is a <strong>flow</strong> visualization, not just status tracking. Every item's append-only <code>transitions[]</code> history makes the four flow metrics computable. This is the modern-Kanban evolution: limit work-in-progress, measure flow, improve incrementally — without the enterprise apparatus (no SLAs, no deterministic delivery dates).</p>
+      <table>
+        <tr><th>Metric</th><th>Definition</th></tr>
+        <tr><td><strong>Work-item age</strong></td><td>Time in the current lane (now − last transition). Past a per-lane threshold (dev 7d · ranked 21d · idea 60d) the card is flagged <em>stale</em>.</td></tr>
+        <tr><td><strong>Cycle time</strong></td><td>Entering Development → reaching Done (falls back to lead time if it skipped Development).</td></tr>
+        <tr><td><strong>Throughput</strong></td><td>Items reaching Done per ISO week (8-week window), per project and across the portfolio.</td></tr>
+        <tr><td><strong>WIP &amp; limit</strong></td><td>Count per lane; a lane over its <code>wipLimits</code> cap is flagged.</td></tr>
+      </table>
+      <h3>Agent flow — the 2026 twist</h3>
+      <p>Most work now ships via AI coding agents, so a <strong>handoff is a first-class flow event</strong>. Recording one (Handoff tab → <em>Generate &amp; mark handed off</em>, or <code>POST …/handoff</code> with <code>record:true</code>) stamps each item with <code>handoff:{handoffId, agent, at}</code> and writes a record under <code>handoffs/</code>. The Flow view then measures:</p>
+      <ul>
+        <li><strong>Brief → shipped</strong> — Done time − handoff time.</li>
+        <li><strong>Agent throughput</strong> — handed-off items reaching Done per week, grouped by agent.</li>
+        <li><strong>Stalled briefs</strong> — handed off, still not Done after 7 days.</li>
+      </ul>
+      <h3>Report-back closes the loop</h3>
+      <p>The brief carries a <strong>reporting protocol</strong>: Claude/Codex report <code>started</code> / <code>done</code> / <code>blocked</code> / <code>failed</code> (with a summary + the verification commands they ran) — via <code>POST …/items/&lt;id&gt;/report</code> or by dropping a JSON into <code>reports/</code> (ingested on read). A <code>done</code> report <strong>auto-moves the card to Done</strong> and the board shows a live toast. No manual step: rank → hand off → agent builds &amp; reports → Done.</p>
+      <div class="grid g2" style="margin-top:18px">
+        <div class="card"><h3 style="margin-top:0">Example throughput / week</h3><div class="chartbox"><canvas id="throughput"></canvas></div></div>
+        <div class="card"><h3 style="margin-top:0">Example agent throughput</h3><div class="chartbox"><canvas id="agentflow"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="crossproject">
+      <h2>Cross-project model</h2>
+      <p>Four operations connect projects. All use the global address <code>"&lt;projectId&gt;/&lt;itemId&gt;"</code>.</p>
+      <div class="card">
+        <svg viewBox="0 0 860 280" width="100%" role="img" aria-label="Cross-project model">
+          <rect x="30" y="40" width="200" height="200" rx="12" fill="#fff" stroke="#cfd6e1"/>
+          <text x="130" y="64" text-anchor="middle" class="lbl">Project A</text>
+          <rect x="55" y="84" width="150" height="34" rx="8" fill="#eef2ff" stroke="#c7d2fe"/><text x="130" y="106" text-anchor="middle" class="sub">item · move →</text>
+          <rect x="55" y="128" width="150" height="34" rx="8" fill="#f8fafc" stroke="#e6eaf0"/><text x="130" y="150" text-anchor="middle" class="sub">item · blocks →</text>
+          <rect x="55" y="172" width="150" height="34" rx="8" fill="#fff7ed" stroke="#fed7aa"/><text x="130" y="194" text-anchor="middle" class="sub">item · shared ⊞</text>
+
+          <rect x="630" y="40" width="200" height="200" rx="12" fill="#fff" stroke="#cfd6e1"/>
+          <text x="730" y="64" text-anchor="middle" class="lbl">Project B</text>
+          <rect x="655" y="84" width="150" height="34" rx="8" fill="#eef2ff" stroke="#c7d2fe"/><text x="730" y="106" text-anchor="middle" class="sub">moved item</text>
+          <rect x="655" y="128" width="150" height="34" rx="8" fill="#f8fafc" stroke="#e6eaf0"/><text x="730" y="150" text-anchor="middle" class="sub">blocked item</text>
+
+          <rect x="350" y="150" width="160" height="60" rx="12" fill="#111827"/>
+          <text x="430" y="176" text-anchor="middle" class="lbl" style="fill:#fff">shared/items/</text>
+          <text x="430" y="194" text-anchor="middle" class="sub" style="fill:#94a3b8">canonical card</text>
+
+          <path class="edge-a" d="M205 101 H630" marker-end="url(#a2)"/>
+          <path class="edge" d="M205 145 H630" marker-end="url(#a2)" stroke="#be123c"/>
+          <path class="edge" d="M205 189 H350 V180" marker-end="url(#a2)" stroke="#b45309"/>
+          <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#9aa4b2"/></marker></defs>
+        </svg>
+      </div>
+      <table>
+        <tr><th>Operation</th><th>What happens on disk</th></tr>
+        <tr><td><strong>Move</strong></td><td>Item file rewritten into project B, removed from A; both boards fixed; link addresses repointed.</td></tr>
+        <tr><td><strong>Link / depend</strong></td><td>An edge appended to <code>links.json</code>; drives the portfolio dependency view + bottleneck boost.</td></tr>
+        <tr><td><strong>Share</strong></td><td>Canonical card written to <code>shared/items/</code>; each source becomes a thin <code>sharedRef</code> pointer; <code>duplicates</code> links recorded.</td></tr>
+        <tr><td><strong>Promote suggestion</strong></td><td>Accept a suggestion into a <em>different</em> project via <code>targetProjectId</code>.</td></tr>
+      </table>
+    </section>
+
+    <section id="api">
+      <h2>REST API</h2>
+      <p>The UI and external tools call the same store functions through these routes.</p>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+        <tr><td>GET·POST</td><td><code>/api/projects</code></td><td>list / create</td></tr>
+        <tr><td>GET·PATCH·DELETE</td><td><code>/api/projects/:id</code></td><td>get / update / archive</td></tr>
+        <tr><td>GET·POST</td><td><code>/api/projects/:id/items</code></td><td>list (with priority) / create</td></tr>
+        <tr><td>GET·PATCH·DELETE</td><td><code>/api/projects/:id/items/:itemId</code></td><td>get / update / delete</td></tr>
+        <tr><td>POST</td><td><code>/api/projects/:id/items/:itemId/move</code></td><td><code>{toLane,toIndex}</code> or <code>{toProjectId}</code></td></tr>
+        <tr><td>GET·PATCH</td><td><code>/api/projects/:id/board</code></td><td>read / persist lane order</td></tr>
+        <tr><td>GET</td><td><code>/api/projects/:id/suggestions</code></td><td>the Inbox</td></tr>
+        <tr><td>POST</td><td><code>…/suggestions/:sugId/accept</code></td><td><code>{targetProjectId?}</code> → item</td></tr>
+        <tr><td>POST</td><td><code>…/suggestions/:sugId/dismiss</code></td><td>→ <code>.dismissed/</code></td></tr>
+        <tr><td>POST</td><td><code>/api/projects/:id/import</code></td><td><code>{roadmapHtml}</code> or <code>{path}</code></td></tr>
+        <tr><td>POST</td><td><code>/api/projects/:id/handoff</code></td><td><code>{itemIds, format}</code> (+ <code>record, agent, moveToDevelopment</code>)</td></tr>
+        <tr><td>GET</td><td><code>/api/projects/:id/handoffs</code></td><td>recorded handoffs</td></tr>
+        <tr><td>POST</td><td><code>…/items/:itemId/report</code></td><td>agent report-back (<code>done</code> auto-moves to Done)</td></tr>
+        <tr><td>GET</td><td><code>/api/projects/:id/reports</code></td><td>ingest dropped reports + list recent (board polls)</td></tr>
+        <tr><td>GET</td><td><code>/api/projects/:id/flow</code></td><td>project flow metrics (WIP, cycle time, throughput, aging, agent flow)</td></tr>
+        <tr><td>GET</td><td><code>/api/flow</code></td><td>portfolio flow metrics</td></tr>
+        <tr><td>GET·POST·DELETE</td><td><code>/api/links</code>, <code>/api/links/:id</code></td><td>dependency graph</td></tr>
+        <tr><td>GET·POST</td><td><code>/api/shared</code>, <code>/api/shared/:id/attach</code></td><td>shared items</td></tr>
+        <tr><td>GET</td><td><code>/api/portfolio</code></td><td>cross-project ranking + graph</td></tr>
+      </table>
+    </section>
+
+    <section id="workflows">
+      <h2>Key workflows</h2>
+      <div class="grid g3">
+        <div class="card"><h3 style="margin-top:0">Import</h3><p style="font-size:14px">Extract the <code>defaults = [...]</code> array from <code>roadmap.html</code>, parse it tolerantly with JSON5 (it's JS literals, not JSON), write one item file per card keeping original ids. Re-import updates in place.</p></div>
+        <div class="card"><h3 style="margin-top:0">Suggestion → Inbox → accept</h3><p style="font-size:14px">A tool drops a JSON into <code>suggestions/</code>. The Inbox polls every few seconds. Accept creates an item with <code>source</code> set and files the suggestion under <code>.dismissed/</code>.</p></div>
+        <div class="card"><h3 style="margin-top:0">Handoff</h3><p style="font-size:14px">Select cards → generate a file-scoped Claude/Codex brief with acceptance checkboxes and verification commands, or queue text / JSON. Copy or download.</p></div>
+      </div>
+    </section>
+
+    <section id="localfirst">
+      <h2>Local-first principles</h2>
+      <div class="grid g2">
+        <div class="card"><h3 style="margin-top:0">Yours, on disk</h3><p style="font-size:14px">No cloud, no accounts, no secrets. Everything is JSON under <code>~/.threlmark</code> — inspect it, back it up, sync it with whatever you like.</p></div>
+        <div class="card"><h3 style="margin-top:0">Interoperable</h3><p style="font-size:14px">The disk layout <em>is</em> the API. Any tool can read a roadmap or drop a suggestion with a single file write, and Threlmark reconciles on read.</p></div>
+        <div class="card"><h3 style="margin-top:0">Crash-safe</h3><p style="font-size:14px">Atomic temp-then-rename writes mean a half-written file can never replace a good one.</p></div>
+        <div class="card"><h3 style="margin-top:0">Forward-compatible</h3><p style="font-size:14px">Unknown fields survive a round-trip; <code>schemaVersion</code> enables lazy migration without a big-bang upgrade.</p></div>
+      </div>
+    </section>
+
+    <section id="ecosystem">
+      <h2>Ecosystem: Threlmark + IdeaClyst</h2>
+      <p>The disk contract isn't just for Threlmark — other local-first tools read and write it. The first is <a href="https://ideaclyst.com" target="_blank" rel="noopener">IdeaClyst</a>, an idea engine (Claude↔Codex "council" + web scouting). Threlmark is the <strong>system of record</strong> for roadmaps; IdeaClyst is an <strong>idea source</strong> that contributes to them.</p>
+      <div class="grid g3">
+        <div class="card"><h3 style="margin-top:0">Reads roadmaps</h3><p style="font-size:14px">IdeaClyst's <code>src/lib/threlmark/</code> layer reads a project's items + board read-only and computes a <em>gap map</em> (which categories/lanes are thin) — matching Threlmark's per-item-file format and priority exactly.</p></div>
+        <div class="card"><h3 style="margin-top:0">Writes suggestions</h3><p style="font-size:14px">It drops scored <strong>Features / Spin-offs / Services</strong> into <code>suggestions/</code> (atomic write), grounded in live web research, tagged <code>source:ideaclyst</code> with provenance — over disk or the REST API, with disk fallback.</p></div>
+        <div class="card"><h3 style="margin-top:0">You stay in control</h3><p style="font-size:14px">Suggestions surface in Threlmark's Inbox. Accept → ranked item; hand off → agent builds &amp; reports back → Done. The loop feeds the next analysis: shrinking gaps change what IdeaClyst proposes.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © 2026 Threlmark · Thorsten Meyer · Powered by <a href="https://thorstenmeyerai.com/" target="_blank" rel="noopener">Thorsten Meyer AI</a>
+  </footer>
+</div>
+
+<script>
+  const ind="#4f46e5", ind2="#6366f1", gold="#b45309", teal="#0f766e", green="#15803d", slate="#94a3b8";
+  const baseOpts={plugins:{legend:{labels:{font:{family:"Inter",weight:600},color:"#475467"}}}};
+  new Chart(document.getElementById("weights"),{type:"bar",
+    data:{labels:["Impact","Evidence","Fit","Effort"],datasets:[{label:"Weight",
+      data:[3,2,2,-1.5],backgroundColor:[ind,ind2,ind2,"#be123c"],borderRadius:6}]},
+    options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{grid:{color:"#eef2f7"},ticks:{color:"#667085"}},x:{grid:{display:false},ticks:{color:"#475467",font:{weight:700}}}}}});
+  new Chart(document.getElementById("statusw"),{type:"bar",indexAxis:"y",
+    data:{labels:["Development","Ranked","Idea","Done"],datasets:[{label:"weight",
+      data:[1.3,1.0,0.85,0.15],backgroundColor:[ind,gold,"#0369a1",green],borderRadius:6}]},
+    options:{...baseOpts,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{grid:{color:"#eef2f7"},ticks:{color:"#667085"}},y:{grid:{display:false},ticks:{color:"#475467",font:{weight:700}}}}}});
+  new Chart(document.getElementById("lanes"),{type:"doughnut",
+    data:{labels:["Ideas","Ranked","Development","Done"],datasets:[{
+      data:[6,4,3,12],backgroundColor:["#0369a1",gold,ind,green],borderColor:"#fff",borderWidth:2}]},
+    options:{...baseOpts,cutout:"58%"}});
+  const wk=["wk1","wk2","wk3","wk4","wk5","wk6","wk7","wk8"];
+  new Chart(document.getElementById("throughput"),{type:"bar",
+    data:{labels:wk,datasets:[{label:"Done",data:[1,0,2,1,3,2,4,3],backgroundColor:ind,borderRadius:5}]},
+    options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{grid:{color:"#eef2f7"},ticks:{color:"#667085",precision:0}},x:{grid:{display:false},ticks:{color:"#94a3b8"}}}}});
+  new Chart(document.getElementById("agentflow"),{type:"bar",
+    data:{labels:wk,datasets:[
+      {label:"claude",data:[0,0,1,1,2,1,3,2],backgroundColor:"#6d28d9",borderRadius:5},
+      {label:"codex",data:[0,0,0,1,0,1,1,1],backgroundColor:teal,borderRadius:5}]},
+    options:{...baseOpts,scales:{y:{stacked:true,grid:{color:"#eef2f7"},ticks:{color:"#667085",precision:0}},x:{stacked:true,grid:{display:false},ticks:{color:"#94a3b8"}}}}});
+</script>
+</body>
+</html>

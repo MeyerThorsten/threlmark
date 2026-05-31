@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Threlmark — README</title>
+<meta name="description" content="Threlmark: a local-first, central project and roadmap hub. Overview, data contract, API, and usage." />
+<style>
+  :root{
+    --ink:#f4f6f8;--surface:#fff;--soft:#eef2f7;--border:#d9dee7;--bb:#cfd6e1;
+    --text:#16181d;--strong:#0b0d12;--muted:#667085;--faint:#98a2b3;
+    --navy:#111827;--indigo:#4f46e5;--teal:#0f766e;--gold:#b45309;--green:#15803d;--rose:#be123c;
+    --ui:"Inter",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+    --shadow:0 10px 26px rgba(15,23,42,.06);--r:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--ui);color:var(--text);line-height:1.65;
+    background:radial-gradient(circle at 16% -4%,rgba(79,70,229,.12),transparent 32rem),linear-gradient(180deg,#fbfcff,var(--ink) 26rem);
+    -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh}
+  a{color:var(--indigo);text-decoration:none}a:hover{text-decoration:underline}
+  main{width:min(880px,calc(100% - 40px));margin:0 auto;padding:44px 0 60px;flex:1}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .brand svg{width:28px;height:28px;color:var(--indigo)}
+  .brand b{font-size:18px;font-weight:900;letter-spacing:-.03em;color:var(--strong)}
+  .brand span{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(2.2rem,4.5vw,3.2rem);font-weight:900;letter-spacing:-.03em;color:var(--strong);margin:0}
+  .lede{font-size:1.12rem;color:var(--muted);max-width:70ch;margin:14px 0 0}
+  h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;color:var(--strong);margin:46px 0 12px;padding-top:14px;border-top:1px solid var(--border)}
+  h3{font-size:1.08rem;font-weight:800;color:var(--strong);margin:24px 0 8px}
+  p,li{max-width:78ch}ul{padding-left:22px}li{margin:5px 0}
+  code{font-family:var(--mono);font-size:.86em;background:var(--soft);padding:1px 6px;border-radius:6px;color:#3b3f95}
+  pre{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:#0f172a;color:#e2e8f0;border-radius:12px;padding:16px 18px;overflow:auto}
+  pre .c{color:#94a3b8}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;display:block;overflow-x:auto}
+  th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:800;padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  .note{border-left:3px solid var(--indigo);background:#f5f3ff;border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;color:#3730a3}
+  .formula{font-family:var(--mono);font-size:14px;background:var(--navy);color:#e2e8f0;border-radius:12px;padding:16px;text-align:center}
+  footer{border-top:1px solid var(--border);padding:22px 0;color:var(--muted);font-size:13px;text-align:center;background:rgba(255,255,255,.6)}
+  footer a{font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.5" opacity=".5"/><path d="M16 5 L25 22 H7 Z" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="17" r="2.6" fill="currentColor"/><path d="M16 1.5V5M16 27v3.5M1.5 16H5M27 16h3.5" stroke="currentColor" stroke-width="1.5"/></svg>
+    <div><b>Threlmark</b><span>readme</span></div>
+  </div>
+
+  <h1>Threlmark</h1>
+  <p class="lede">A local-first, central project &amp; roadmap hub. Manage all your projects in one place and run a ranked, kanban-style roadmap for each — with the data stored as plain JSON on disk so your other tools can read a project's roadmap and write suggestions back into it.</p>
+  <div class="note">Built with Next.js (App Router) + TypeScript. No database, no cloud, no accounts. Disk JSON under <code>~/.threlmark</code> is the single source of truth; a small REST API sits over the same store so the UI and external tools share one path. A fully illustrated version of these docs lives in <a href="threlmark-docs.html">threlmark-docs.html</a>.</div>
+
+  <h2>Quick start</h2>
+  <pre>npm install
+npm run dev        <span class="c"># http://localhost:3000  (or: PORT=4789 npm run dev)</span>
+
+npm run typecheck  <span class="c"># tsc --noEmit</span>
+npm run lint       <span class="c"># eslint</span>
+npm run build      <span class="c"># production build</span></pre>
+  <p>All state is JSON on disk under the data root, which defaults to <code>~/.threlmark</code> and can be overridden with <code>THRELMARK_DATA_DIR</code>. The root is home-based, not repo-relative — it's a shared hub every one of your apps points at.</p>
+
+  <h2>Core concepts</h2>
+  <table>
+    <tr><th>Concept</th><th>What it is</th></tr>
+    <tr><td><strong>Project</strong></td><td>One app/product with its own kanban roadmap, at <code>projects/&lt;id&gt;/</code>.</td></tr>
+    <tr><td><strong>Item</strong></td><td>A roadmap card: title, category, four 1–5 scores, description, target files, acceptance criteria. One file each.</td></tr>
+    <tr><td><strong>Lane / status</strong></td><td><code>idea → ranked → development → done</code>. The lane is the item's status.</td></tr>
+    <tr><td><strong>Priority</strong></td><td>Computed, never stored.</td></tr>
+    <tr><td><strong>Suggestion</strong></td><td>JSON another tool drops into <code>projects/&lt;id&gt;/suggestions/</code>; surfaces in the Inbox.</td></tr>
+    <tr><td><strong>Portfolio</strong></td><td>Cross-project ranking by status-weighted priority.</td></tr>
+    <tr><td><strong>Shared item / Link</strong></td><td>One card referenced by many projects; cross-project dependency edges.</td></tr>
+    <tr><td><strong>Flow</strong></td><td>Items record lane <code>transitions[]</code>, so age, cycle time and throughput are measurable; lanes can carry WIP limits.</td></tr>
+    <tr><td><strong>Handoff (agent flow)</strong></td><td>A recorded handoff stamps items with <code>handoff:{agent}</code>; the Flow view tracks brief → shipped, agent throughput, and stalled briefs.</td></tr>
+  </table>
+
+  <h2>Scoring &amp; priority</h2>
+  <div class="formula">priority = max(0, round(impact·3 + evidence·2 + fit·2 − effort·1.5))</div>
+  <p>Reused verbatim from the original Roadmap Lab, so imported cards rank identically (e.g. <code>5/5/5/4</code> → <strong>29</strong>). Portfolio ranking weights priority by status — <code>development 1.3</code>, <code>ranked 1.0</code>, <code>idea 0.85</code>, <code>done 0.15</code> — with a small boost for items that block others.</p>
+
+  <h2>Flow &amp; WIP</h2>
+  <p>The board is a <em>flow</em> view, not just status tracking. Each item's append-only <code>transitions[]</code> history powers <strong>work-item age</strong> (time in lane; flagged stale past development 7d / ranked 21d / idea 60d), <strong>cycle time</strong> (Development → Done), and <strong>throughput</strong> (items finished per week). <strong>WIP limits</strong> in <code>project.json</code> flag overloaded lanes. A handoff is a first-class flow event: recording one (Handoff tab → <em>Generate &amp; mark handed off</em>) stamps items with <code>handoff</code> and lets the <strong>Flow</strong> tab measure <strong>brief → shipped</strong>, <strong>agent throughput</strong>, and <strong>stalled briefs</strong> (handed off, not Done after 7 days). The home page shows a portfolio-wide flow strip.</p>
+  <p><strong>Agent report-back closes the loop.</strong> The brief includes a reporting protocol so Claude/Codex report status by themselves — <code>started</code> / <code>done</code> / <code>blocked</code> / <code>failed</code> — via the REST API or a dropped <code>reports/</code> file. A <code>done</code> report auto-moves the card to Done and the board shows a live toast; no manual step.</p>
+
+  <h2>The shared data contract</h2>
+  <pre>~/.threlmark/
+  threlmark.json                 <span class="c"># manifest</span>
+  links.json                     <span class="c"># cross-project dependency graph</span>
+  projects/&lt;projectId&gt;/
+    project.json                 <span class="c"># project metadata</span>
+    board.json                   <span class="c"># lane ordering (self-healing)</span>
+    items/&lt;itemId&gt;.json          <span class="c"># card + transitions[] + handoff</span>
+    suggestions/&lt;sugId&gt;.json     <span class="c"># external drop zone = the Inbox</span>
+    suggestions/.dismissed/      <span class="c"># accepted/dismissed (audit)</span>
+    handoffs/&lt;handoffId&gt;.json    <span class="c"># recorded agent handoffs</span>
+    reports/&lt;file&gt;.json          <span class="c"># agent report-back (ingested on read)</span>
+    ROADMAP.md                   <span class="c"># regenerated human mirror</span>
+  shared/items/&lt;itemId&gt;.json     <span class="c"># shared across projects</span>
+  archive/projects/&lt;projectId&gt;/  <span class="c"># archived (still readable)</span></pre>
+  <p>Per-item files let external tools write concurrently without clobbering a shared array; <code>board.json</code> self-heals on read. Atomic temp-then-rename writes; tolerant reads default missing fields and preserve unknown keys. Only <code>source</code> and <code>title</code> are required in a suggestion.</p>
+
+  <h2>REST API</h2>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+    <tr><td>GET·POST</td><td><code>/api/projects</code></td><td>list / create</td></tr>
+    <tr><td>GET·PATCH·DELETE</td><td><code>/api/projects/:id</code></td><td>get / update / archive</td></tr>
+    <tr><td>GET·POST</td><td><code>/api/projects/:id/items</code></td><td>list / create</td></tr>
+    <tr><td>GET·PATCH·DELETE</td><td><code>/api/projects/:id/items/:itemId</code></td><td>get / update / delete</td></tr>
+    <tr><td>POST</td><td><code>…/items/:itemId/move</code></td><td><code>{toLane,toIndex}</code> or <code>{toProjectId}</code></td></tr>
+    <tr><td>GET·PATCH</td><td><code>/api/projects/:id/board</code></td><td>lane order</td></tr>
+    <tr><td>GET / POST</td><td><code>/api/projects/:id/suggestions</code> · <code>…/accept</code> · <code>…/dismiss</code></td><td>the Inbox</td></tr>
+    <tr><td>POST</td><td><code>/api/projects/:id/import</code></td><td><code>{roadmapHtml}</code> or <code>{path}</code></td></tr>
+    <tr><td>POST</td><td><code>/api/projects/:id/handoff</code></td><td><code>{itemIds, format}</code> (+ <code>record, agent</code> to log a handoff)</td></tr>
+    <tr><td>GET</td><td><code>/api/projects/:id/flow</code> · <code>/api/flow</code></td><td>project &amp; portfolio flow metrics</td></tr>
+    <tr><td>GET</td><td><code>/api/projects/:id/handoffs</code></td><td>recorded handoffs</td></tr>
+    <tr><td>POST·GET</td><td><code>…/items/:itemId/report</code> · <code>…/reports</code></td><td>agent report-back (done auto-moves to Done)</td></tr>
+    <tr><td>GET·POST·DELETE</td><td><code>/api/links</code> · <code>/api/shared</code> · <code>/api/portfolio</code></td><td>cross-project + ranking</td></tr>
+  </table>
+
+  <h2>Features</h2>
+  <ul>
+    <li><strong>Multi-project</strong> — create / archive / switch; cross-project Portfolio.</li>
+    <li><strong>Ranked kanban</strong> — four lanes, drag, 4-axis scoring + computed priority, categories.</li>
+    <li><strong>Roadmap Lab workflow</strong> — search, category filter, Rank by score, Push top 3, inline Add Item, on-card sliders, selection → live Queue/Markdown/JSON brief, Copy dev brief.</li>
+    <li><strong>Import</strong> — read the original <code>roadmap.html</code> defaults (idempotent).</li>
+    <li><strong>Handoff</strong> — file-scoped Claude/Codex prompts with acceptance checkboxes + verify commands, or Markdown / JSON.</li>
+    <li><strong>Inbox + cross-project</strong> — accept/dismiss/promote suggestions; move, link, and share items across projects.</li>
+    <li><strong>Flow</strong> — WIP limits, age/stale badges, a Flow tab (throughput, cycle time, aging) and a portfolio flow strip.</li>
+    <li><strong>Agent flow</strong> — record handoffs to Claude/Codex; track brief → shipped, agent throughput, stalled briefs.</li>
+    <li><strong>Local-first</strong> — no cloud, no accounts, no secrets.</li>
+  </ul>
+
+  <h2>Ecosystem: Threlmark + IdeaClyst</h2>
+  <p>Threlmark's on-disk layout is a <strong>contract</strong> other local-first tools read and write. <a href="https://ideaclyst.com" target="_blank" rel="noopener">IdeaClyst</a> (an idea engine) added a <code>src/lib/threlmark/</code> layer that <strong>reads</strong> a project's roadmap + computes a gap map, and <strong>writes scored suggestions</strong> (Features / Spin-offs / Services, grounded in web research, tagged <code>source:ideaclyst</code>) into <code>suggestions/</code> — via disk or the REST API, with disk fallback. They form a loop: IdeaClyst proposes what to build → it appears in Threlmark's Inbox → you accept &amp; rank → hand off to an agent → the agent builds and reports back → Done. Any tool that speaks the contract can join.</p>
+
+  <h2>Hosting</h2>
+  <p>Threlmark is local-first by design. See <a href="HOSTING.html">HOSTING.html</a> for how to publish the marketing site and what a hosted version of the tool would require.</p>
+</main>
+
+<footer>
+  © 2026 Threlmark · Thorsten Meyer · Powered by <a href="https://thorstenmeyerai.com/" target="_blank" rel="noopener">Thorsten Meyer AI</a>
+</footer>
+</body>
+</html>

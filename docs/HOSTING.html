@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hosting Threlmark</title>
+<meta name="description" content="How to host the Threlmark website and what offering a hosted version of the tool would require." />
+<style>
+  :root{
+    --ink:#f4f6f8;--surface:#fff;--soft:#eef2f7;--border:#d9dee7;--bb:#cfd6e1;
+    --text:#16181d;--strong:#0b0d12;--muted:#667085;--faint:#98a2b3;
+    --navy:#111827;--indigo:#4f46e5;--teal:#0f766e;--gold:#b45309;--green:#15803d;--rose:#be123c;
+    --ui:"Inter",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+    --shadow:0 10px 26px rgba(15,23,42,.06);--r:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--ui);color:var(--text);line-height:1.65;
+    background:radial-gradient(circle at 16% -4%,rgba(79,70,229,.12),transparent 32rem),linear-gradient(180deg,#fbfcff,var(--ink) 26rem);
+    -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh}
+  a{color:var(--indigo);text-decoration:none}a:hover{text-decoration:underline}
+  main{width:min(820px,calc(100% - 40px));margin:0 auto;padding:44px 0 60px;flex:1}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .brand svg{width:28px;height:28px;color:var(--indigo)}
+  .brand b{font-size:18px;font-weight:900;letter-spacing:-.03em;color:var(--strong)}
+  .brand span{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(2.1rem,4.5vw,3rem);font-weight:900;letter-spacing:-.03em;color:var(--strong);margin:0}
+  .lede{font-size:1.12rem;color:var(--muted);max-width:68ch;margin:14px 0 0}
+  h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;color:var(--strong);margin:46px 0 12px;padding-top:14px;border-top:1px solid var(--border)}
+  h3{font-size:1.1rem;font-weight:800;color:var(--strong);margin:24px 0 8px}
+  p,li{max-width:74ch}ul{padding-left:22px}li{margin:6px 0}
+  code{font-family:var(--mono);font-size:.86em;background:var(--soft);padding:1px 6px;border-radius:6px;color:#3b3f95}
+  .opt{background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 22px;margin:16px 0}
+  .opt h3{margin-top:0;display:flex;align-items:center;gap:10px}
+  .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;border:1px solid var(--bb)}
+  .tag.easy{color:var(--green);background:#ecfdf5;border-color:#b6e8ca}
+  .tag.rec{color:var(--indigo);background:#eef2ff;border-color:#c7d2fe}
+  .tag.big{color:var(--gold);background:#fffbeb;border-color:#fde68a}
+  .note{border-left:3px solid var(--indigo);background:#f5f3ff;border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;color:#3730a3}
+  .effort{font-size:13.5px;color:var(--muted);margin-top:8px}
+  footer{border-top:1px solid var(--border);padding:22px 0;color:var(--muted);font-size:13px;text-align:center;background:rgba(255,255,255,.6)}
+  footer a{font-weight:700}
+  .toc{display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px;margin-top:24px}
+  .toc a{font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.5" opacity=".5"/><path d="M16 5 L25 22 H7 Z" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="17" r="2.6" fill="currentColor"/><path d="M16 1.5V5M16 27v3.5M1.5 16H5M27 16h3.5" stroke="currentColor" stroke-width="1.5"/></svg>
+    <div><b>Threlmark</b><span>hosting guide</span></div>
+  </div>
+
+  <h1>Hosting Threlmark</h1>
+  <p class="lede">Two separate things can be "hosted" on <strong>Threlmark.com</strong>, with very different requirements: the public website (easy, static) and the Threlmark app itself (local-first — a public, multi-user service is a different product).</p>
+  <div class="toc"><a href="#site">1 · Public website</a><a href="#hosted">2 · A hosted version of the app</a><a href="#current">Keeping it current</a></div>
+
+  <h2 id="site">1 · The public website (<code>site/</code>)</h2>
+  <p>The files in <code>site/</code> are plain static HTML/CSS with <strong>no build step and no third-party requests</strong> (no font CDN, no analytics) — deliberately, so the site is DSGVO-clean and runs on any web host.</p>
+  <h3>Deploy to all-inkl.com</h3>
+  <ul>
+    <li>Upload the contents of <code>site/</code> to your web root via FTP/SFTP or the KAS file manager.</li>
+    <li><code>index.html</code> is the homepage; <code>privacy.html</code>, <code>terms.html</code>, <code>contact.html</code>, <code>impressum.html</code> are linked in every page's footer.</li>
+    <li>No server config needed. (Optional: an <code>.htaccess</code> to force HTTPS.)</li>
+  </ul>
+  <div class="note">✅ Already deployed and live at <a href="https://threlmark.com/" target="_blank" rel="noopener">threlmark.com</a>. The "Open the app" button links to <code>/app</code> — see below for what should live there.</div>
+
+  <h2 id="hosted">2 · Can Threlmark.com offer a <em>hosted</em> version of the tool?</h2>
+  <p>Short answer: <strong>not as-is on all-inkl shared hosting, and not as a single shared instance.</strong> Threlmark is intentionally <strong>local-first</strong>: one JSON store under <code>~/.threlmark</code>, <strong>no authentication</strong>, <strong>no multi-tenancy</strong>. On a public URL unchanged, every visitor would share and edit one roadmap store.</p>
+  <p>Also: all-inkl shared hosting serves PHP/static. Next.js needs a <strong>Node.js runtime</strong> for its API routes (which read/write the disk store), which the standard packages don't provide. The marketing site runs fine there; the app needs a Node host.</p>
+
+  <div class="opt">
+    <h3>Option A — Static demo (read-only) <span class="tag easy">easiest · fits all-inkl</span></h3>
+    <p>Ship a read-only, sample-data demo at <code>/app</code>: bundle seeded JSON and route writes to the browser's <code>localStorage</code> (exactly like the original Roadmap Lab). Full look and feel; nothing persists server-side; no auth.</p>
+    <p class="effort"><strong>Effort:</strong> small — add a demo flag that serves bundled JSON and sends writes to <code>localStorage</code>.</p>
+  </div>
+
+  <div class="opt">
+    <h3>Option B — Personal hosted instance <span class="tag rec">recommended for your own use</span></h3>
+    <p>Run the real app on a small Node host behind a password so only you use it.</p>
+    <ul>
+      <li>Host on a VPS (Hetzner), Fly.io, or a Node container; point <code>app.threlmark.com</code> at it.</li>
+      <li>Set <code>THRELMARK_DATA_DIR</code> to a persistent, backed-up volume.</li>
+      <li>Add an auth gate (HTTP Basic via reverse proxy, or a single-password middleware).</li>
+    </ul>
+    <p class="effort"><strong>Effort:</strong> small–medium. No core code changes — just deployment + an auth layer.</p>
+  </div>
+
+  <div class="opt">
+    <h3>Option C — True multi-tenant SaaS <span class="tag big">a separate build</span></h3>
+    <p>A public "sign up and get your own roadmaps" service — a real product change, not a deploy:</p>
+    <ul>
+      <li><strong>Accounts + auth</strong> (the app currently has none).</li>
+      <li><strong>Per-tenant data isolation</strong> — a data dir per account (the contract namespaces cleanly under a root) or a database adapter behind the store interface.</li>
+      <li><strong>A Node host</strong> with persistent, backed-up storage, plus rate limits, billing, and GDPR data-subject tooling.</li>
+    </ul>
+    <p class="effort"><strong>Effort:</strong> large. The <code>src/lib/*/store.ts</code> boundary is the natural seam to swap disk for per-tenant storage.</p>
+  </div>
+
+  <h3>Recommendation</h3>
+  <ul>
+    <li><strong>Now:</strong> the static site is live; add <strong>Option A</strong> (read-only demo) at <code>/app</code> so "Open the app" shows the tool.</li>
+    <li><strong>For your own online use:</strong> <strong>Option B</strong> on a small Node host.</li>
+    <li><strong>Only build Option C</strong> if you want to offer accounts to other people.</li>
+  </ul>
+
+  <h2 id="current">Keeping the deployed copy current</h2>
+  <ul>
+    <li><strong>Static site:</strong> a deploy step (FTP/SFTP sync, or a GitHub Action with an FTP action) that uploads <code>site/</code> on each change.</li>
+    <li><strong>App (Option B):</strong> deploy from git on the Node host (<code>git pull &amp;&amp; npm ci &amp;&amp; npm run build &amp;&amp; pm2 restart</code>), or a container image rebuilt on push.</li>
+  </ul>
+  <div class="note">⚠️ Keep deploy credentials out of any public git repository. Site content and secrets should never be committed to a public remote.</div>
+</main>
+
+<footer>
+  © 2026 Threlmark · Thorsten Meyer · Powered by <a href="https://thorstenmeyerai.com/" target="_blank" rel="noopener">Thorsten Meyer AI</a>
+</footer>
+</body>
+</html>
