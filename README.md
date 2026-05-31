@@ -1,6 +1,8 @@
 # Threlmark
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-4f46e5.svg)](LICENSE) &nbsp;Next.js · TypeScript · local-first · no database
+[![License: MIT](https://img.shields.io/badge/License-MIT-4f46e5.svg)](LICENSE) &nbsp;[![Website](https://img.shields.io/badge/web-threlmark.com-0f766e.svg)](https://threlmark.com) &nbsp;Next.js · TypeScript · local-first · no database
+
+🌐 **Website & manual:** [threlmark.com](https://threlmark.com) · 📖 [User manual](https://threlmark.com/manual.html)
 
 **A local-first, central project & roadmap hub.** Manage *all* your projects in one place and run a ranked, kanban-style roadmap for each — with the data stored as plain JSON on disk so your other tools can read a project's roadmap and write suggestions back into it.
 
