@@ -6,6 +6,7 @@
 import {
   cycleTimeMs,
   isStale,
+  isOverdue,
   isStalledBrief,
   itemAgeMs,
   lastEnteredLaneAt,
@@ -105,8 +106,10 @@ export function computeFlow(
       status: it.status,
       ageMs: itemAgeMs(it, now),
       stale: isStale(it, now),
+      dueDate: it.dueDate,
+      overdue: isOverdue(it, now),
     }))
-    .sort((a, b) => b.ageMs - a.ageMs);
+    .sort((a, b) => Number(b.overdue) - Number(a.overdue) || b.ageMs - a.ageMs);
 
   // Stalled briefs
   const stalled: StalledBrief[] = items

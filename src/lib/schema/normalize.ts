@@ -47,6 +47,14 @@ function toTrimmedUniqueStrings(value: unknown): string[] | undefined {
   return unique.length ? unique : undefined;
 }
 
+function toDateOnly(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const match = /^\d{4}-\d{2}-\d{2}/.exec(trimmed);
+  return match?.[0];
+}
+
 function toAgent(value: unknown): Agent {
   return AGENTS.includes(value as Agent) ? (value as Agent) : "other";
 }
@@ -112,6 +120,8 @@ export function normalizeItem(
     files: _files,
     acceptance: _acc,
     labels: _labels,
+    dueDate: _dueDate,
+    scheduledFor: _scheduledFor,
     transitions: _trans,
     handoff: _handoff,
     reports: _reports,
@@ -139,6 +149,8 @@ export function normalizeItem(
     files: typeof _files === "string" ? _files : "",
     acceptance: toStringArray(_acc),
     labels: toTrimmedUniqueStrings(_labels),
+    dueDate: toDateOnly(_dueDate),
+    scheduledFor: toDateOnly(_scheduledFor),
     source: typeof raw.source === "string" ? raw.source : undefined,
     sharedRef: typeof raw.sharedRef === "string" ? raw.sharedRef : undefined,
     transitions: normalizeTransitions(_trans, status, createdAt),

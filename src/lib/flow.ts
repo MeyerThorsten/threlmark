@@ -72,6 +72,23 @@ export function isStalledBrief(item: RoadmapItem, now = Date.now()): boolean {
   return now - ts(item.handoff.at) > STALLED_BRIEF_MS;
 }
 
+function endOfDate(date: string): number {
+  const n = Date.parse(`${date}T23:59:59.999`);
+  return Number.isNaN(n) ? Number.POSITIVE_INFINITY : n;
+}
+
+export function isOverdue(item: Pick<RoadmapItem, "dueDate" | "status">, now = Date.now()): boolean {
+  if (!item.dueDate || item.status === "done") return false;
+  return endOfDate(item.dueDate) < now;
+}
+
+export function humanDate(date: string): string {
+  const d = new Date(`${date}T00:00:00`);
+  return Number.isNaN(d.getTime())
+    ? date
+    : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 /** ms → compact human label, e.g. "3d", "5h", "just now". */
 export function humanAge(ms: number): string {
   const m = Math.floor(ms / 60000);

@@ -17,7 +17,7 @@ import {
 } from "../paths";
 import { normalizeSuggestion } from "../schema/normalize";
 import { migrate } from "../schema/version";
-import type { RoadmapItemView, SuggestionView } from "../schema/types";
+import type { RoadmapItemView, Suggestion, SuggestionView } from "../schema/types";
 
 async function listFiles(projectId: string): Promise<string[]> {
   const dir = suggestionsDir(projectId);
@@ -53,6 +53,19 @@ export async function getSuggestion(
   if (!raw) return null;
   const now = new Date().toISOString();
   return { ...normalizeSuggestion(migrate(raw), sugId, now), id: sugId, projectId };
+}
+
+export async function upsertSuggestion(
+  projectId: string,
+  input: Suggestion,
+): Promise<SuggestionView> {
+  const now = new Date().toISOString();
+  const id = input.id?.trim();
+  if (!id) throw new Error("Suggestion id is required");
+  const suggestion = normalizeSuggestion({ ...input, id, createdAt: input.createdAt ?? now }, id, now);
+  await ensureDir(suggestionsDir(projectId));
+  await writeJson(suggestionPath(projectId, id), suggestion);
+  return { ...suggestion, id, projectId };
 }
 
 /** Accept a suggestion into a project (the owning one, or `targetProjectId`). */

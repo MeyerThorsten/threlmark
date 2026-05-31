@@ -1,4 +1,4 @@
-import { humanAge } from "@/lib/flow";
+import { humanAge, humanDate } from "@/lib/flow";
 import {
   LANES,
   LANE_LABELS,
@@ -113,6 +113,11 @@ export function FlowPanel({ flow, wipLimits = {} }: { flow: FlowMetrics; wipLimi
                 <div key={`${a.projectId}-${a.id}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
                   <span style={{ color: "var(--text-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
                   {a.projectName && <span className="muted" style={{ fontSize: 11 }}>· {a.projectName}</span>}
+                  {a.dueDate && (
+                    <span className={`pill pill-due ${a.overdue ? "overdue" : ""}`}>
+                      due {humanDate(a.dueDate)}
+                    </span>
+                  )}
                   <div className="spacer" />
                   <span className={`readout ${a.stale ? "" : "muted"}`} style={{ fontSize: 12, color: a.stale ? "var(--rose)" : undefined }}>
                     {humanAge(a.ageMs)}{a.stale ? " ⚠" : ""}

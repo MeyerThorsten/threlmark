@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "./theme-toggle";
 
 type NavProject = {
   id: string;
@@ -82,9 +83,12 @@ export function Sidebar({ projects }: { projects: NavProject[] }) {
       })}
 
       <div className="spacer" />
-      <Link href="/projects/new" className="btn btn-sm" style={{ justifyContent: "center" }}>
-        + New project
-      </Link>
+      <div className="sidebar-actions">
+        <ThemeToggle />
+        <Link href="/projects/new" className="btn btn-sm" style={{ justifyContent: "center", flex: 1 }}>
+          + New project
+        </Link>
+      </div>
     </aside>
   );
 }

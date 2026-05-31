@@ -39,6 +39,12 @@ export const itemsDir = (id: string) => join(projectDir(id), "items");
 export const itemPath = (projectId: string, itemId: string) =>
   join(itemsDir(projectId), `${itemId}.json`);
 
+export const commentsDir = (id: string) => join(projectDir(id), "comments");
+export const itemCommentsDir = (projectId: string, itemId: string) =>
+  join(commentsDir(projectId), itemId);
+export const itemCommentPath = (projectId: string, itemId: string, commentId: string) =>
+  join(itemCommentsDir(projectId, itemId), `${commentId}.json`);
+
 export const handoffsDir = (id: string) => join(projectDir(id), "handoffs");
 export const handoffPath = (projectId: string, handoffId: string) =>
   join(handoffsDir(projectId), `${handoffId}.json`);

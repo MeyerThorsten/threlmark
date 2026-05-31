@@ -102,6 +102,21 @@ export interface AgentReport {
   verification?: string;
 }
 
+export const COMMENT_KINDS = ["comment", "decision"] as const;
+export type CommentKind = (typeof COMMENT_KINDS)[number];
+
+/** Append-only local notes attached to an item. */
+export interface ItemComment {
+  schemaVersion: number;
+  id: string;
+  projectId: string;
+  itemId: string;
+  kind: CommentKind;
+  body: string;
+  author?: string;
+  createdAt: string;
+}
+
 /**
  * A roadmap card. Imports the roadmap.html `defaults` shape exactly. `priority`
  * is never stored — it is computed on read so it can never drift from the axes.
@@ -123,6 +138,10 @@ export interface RoadmapItem {
   acceptance: string[];
   /** Free-form labels for filtering and grouping cards. */
   labels?: string[];
+  /** Optional YYYY-MM-DD date used for due/overdue scheduling. */
+  dueDate?: string;
+  /** Optional YYYY-MM-DD date for planned work start. */
+  scheduledFor?: string;
   /** Producing tool when accepted from a suggestion, e.g. "ideaclyst". */
   source?: string;
   /** If set ("shared/<itemId>"), this is a local pointer to a shared item. */
@@ -237,6 +256,8 @@ export interface AgingItem {
   status: Status;
   ageMs: number;
   stale: boolean;
+  dueDate?: string;
+  overdue: boolean;
 }
 
 /** A handed-off item still not shipped. */

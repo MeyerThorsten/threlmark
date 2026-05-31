@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import { badRequest, notFound, ok, parseBody, serverError } from "@/lib/api";
 import { importRoadmapHtml } from "@/lib/importer/roadmap-html";
+import { importTrelloJson } from "@/lib/importer/trello";
 import { getProject } from "@/lib/projects/store";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -11,20 +12,33 @@ export async function POST(req: Request, { params }: Ctx) {
     const { id } = await params;
     if (!(await getProject(id))) return notFound(`Project not found: ${id}`);
 
-    const body = await parseBody<{ roadmapHtml?: string; path?: string }>(req);
-    let html = body.roadmapHtml;
-    if (!html && body.path) {
+    const body = await parseBody<{
+      format?: string;
+      roadmapHtml?: string;
+      trelloJson?: string;
+      path?: string;
+    }>(req);
+    const format = body.format === "trello" ? "trello" : "roadmap";
+    let contents = format === "trello" ? body.trelloJson : body.roadmapHtml;
+    if (!contents && body.path) {
       try {
-        html = await readFile(body.path, "utf8");
+        contents = await readFile(body.path, "utf8");
       } catch {
         return badRequest(`Could not read file at path: ${body.path}`);
       }
     }
-    if (!html || !html.trim()) {
-      return badRequest("Provide `roadmapHtml` (the file contents) or `path`");
+    if (!contents || !contents.trim()) {
+      return badRequest(
+        format === "trello"
+          ? "Provide `trelloJson` (the export contents) or `path`"
+          : "Provide `roadmapHtml` (the file contents) or `path`",
+      );
     }
 
-    const result = await importRoadmapHtml(id, html);
+    const result =
+      format === "trello"
+        ? await importTrelloJson(id, contents)
+        : await importRoadmapHtml(id, contents);
     return ok(result);
   } catch (err) {
     if (err instanceof SyntaxError) return badRequest("Invalid JSON body");

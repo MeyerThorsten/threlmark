@@ -26,8 +26,12 @@ export interface CreateItemInput {
   files?: string;
   acceptance?: string[];
   labels?: string[];
+  dueDate?: string;
+  scheduledFor?: string;
   source?: string;
   sharedRef?: string;
+  sourceId?: string;
+  sourceUrl?: string;
   /** Reuse an explicit id (used by the importer for idempotency). */
   id?: string;
 }
@@ -60,6 +64,21 @@ export async function createItem(
   const board = await getBoard(projectId);
   await writeBoard(projectId, placeInLane(board, id, item.status));
   return withPriority(item);
+}
+
+export async function upsertItem(
+  projectId: string,
+  input: CreateItemInput,
+): Promise<RoadmapItemView> {
+  if (input.id) {
+    const current = await readItem(projectId, input.id);
+    if (current) {
+      const patch = { ...input };
+      delete patch.id;
+      return updateItem(projectId, current.id, patch);
+    }
+  }
+  return createItem(projectId, input);
 }
 
 export async function updateItem(

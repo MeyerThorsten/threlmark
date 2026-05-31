@@ -4,13 +4,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client";
 import { generateHandoff, type HandoffFormat } from "@/lib/handoff/generate";
-import { humanAge, itemAgeMs, isStale } from "@/lib/flow";
+import { humanAge, humanDate, itemAgeMs, isOverdue, isStale } from "@/lib/flow";
 import { priority } from "@/lib/priority";
 import {
   CATEGORIES,
   LANES,
   LANE_LABELS,
   type Board,
+  type ItemComment,
   type Lane,
   type Project,
   type RoadmapItemView,
@@ -109,6 +110,7 @@ export function RoadmapWorkspace({
   const [toast, setToast] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [baseUrl, setBaseUrl] = useState<string | undefined>(undefined);
+  const [commentsByItem, setCommentsByItem] = useState<Record<string, ItemComment[]>>({});
 
   useEffect(() => {
     const t = setTimeout(() => setBaseUrl(window.location.origin), 0);
@@ -203,17 +205,42 @@ export function RoadmapWorkspace({
     () => all.filter((it) => it.status === "development" || selected.has(it.id)),
     [all, selected],
   );
+  const briefIds = useMemo(() => briefItems.map((it) => it.id).sort().join("|"), [briefItems]);
+  useEffect(() => {
+    if (!briefIds) return;
+    let cancelled = false;
+    const ids = briefIds.split("|").filter(Boolean);
+    Promise.all(
+      ids.map(async (id) => {
+        try {
+          return [id, await api<ItemComment[]>(`/api/projects/${projectId}/items/${id}/comments`)] as const;
+        } catch {
+          return [id, []] as const;
+        }
+      }),
+    ).then((entries) => {
+      if (cancelled) return;
+      setCommentsByItem((current) => ({ ...current, ...Object.fromEntries(entries) }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [briefIds, projectId]);
+  const briefItemsWithComments = useMemo(
+    () => briefItems.map((item) => ({ ...item, comments: commentsByItem[item.id] ?? [] })),
+    [briefItems, commentsByItem],
+  );
   const reporting = useMemo(
     () => ({ baseUrl, projectId, agent: "claude" }),
     [baseUrl, projectId],
   );
   const briefContent = useMemo(
-    () => generateHandoff({ name: projectName, repoPath } as Project, briefItems, briefTab, reporting),
-    [briefItems, briefTab, projectName, repoPath, reporting],
+    () => generateHandoff({ name: projectName, repoPath } as Project, briefItemsWithComments, briefTab, reporting),
+    [briefItemsWithComments, briefTab, projectName, repoPath, reporting],
   );
 
   async function copyBrief() {
-    const md = generateHandoff({ name: projectName, repoPath } as Project, briefItems, "markdown", reporting);
+    const md = generateHandoff({ name: projectName, repoPath } as Project, briefItemsWithComments, "markdown", reporting);
     await navigator.clipboard.writeText(md);
     flash(`Copied dev brief (${briefItems.length} item${briefItems.length === 1 ? "" : "s"})`);
   }
@@ -405,6 +432,11 @@ export function RoadmapWorkspace({
                               {item.status !== "done" && (
                                 <span className="pill pill-age" title="Time in this lane">
                                   ⏱ {humanAge(itemAgeMs(item))}
+                                </span>
+                              )}
+                              {item.dueDate && (
+                                <span className={`pill pill-due ${isOverdue(item) ? "overdue" : ""}`}>
+                                  due {humanDate(item.dueDate)}
                                 </span>
                               )}
                               {item.handoff && (

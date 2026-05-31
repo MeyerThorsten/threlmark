@@ -7,7 +7,7 @@
  */
 
 import { byPriorityDesc } from "../priority";
-import type { Project, RoadmapItemView } from "../schema/types";
+import type { ItemComment, Project, RoadmapItemView } from "../schema/types";
 
 export type HandoffFormat = "markdown" | "text" | "json";
 
@@ -21,6 +21,11 @@ export interface HandoffReporting {
 
 function sorted(items: RoadmapItemView[]): RoadmapItemView[] {
   return [...items].sort(byPriorityDesc);
+}
+
+function itemComments(item: RoadmapItemView): ItemComment[] {
+  const comments = (item as RoadmapItemView & { comments?: unknown }).comments;
+  return Array.isArray(comments) ? (comments as ItemComment[]) : [];
 }
 
 /** The reporting protocol appended to a Markdown brief so agents report back. */
@@ -65,6 +70,7 @@ export function toQueueText(items: RoadmapItemView[]): string {
         `${i + 1}. ${item.title} (${item.category})`,
         `Priority: ${item.priority} | Impact ${item.impact} | Evidence ${item.evidence} | Fit ${item.fit} | Effort ${item.effort}`,
         item.labels?.length ? `Labels: ${item.labels.join(", ")}` : "",
+        item.dueDate ? `Due: ${item.dueDate}` : "",
         item.description,
         `Files: ${item.files || "TBD"}`,
         "",
@@ -102,6 +108,7 @@ export function toMarkdown(
       `- **Priority:** ${item.priority} (impact ${item.impact}, evidence ${item.evidence}, fit ${item.fit}, effort ${item.effort})`,
       `- **Category:** ${item.category}`,
       `- **Lane:** ${item.status}`,
+      item.dueDate ? `- **Due:** ${item.dueDate}` : "",
       item.labels?.length ? `- **Labels:** ${item.labels.join(", ")}` : "",
       item.source ? `- **Source:** ${item.source}` : "",
       "",
@@ -113,6 +120,17 @@ export function toMarkdown(
       ...acceptance.map((a) => `- [ ] ${a}`),
       "",
     );
+    const comments = itemComments(item);
+    if (comments.length) {
+      lines.push(
+        "**Comments and decisions:**",
+        ...comments.slice(-8).map((comment) => {
+          const author = comment.author ? ` by ${comment.author}` : "";
+          return `- ${comment.kind}${author} (${comment.createdAt}): ${comment.body}`;
+        }),
+        "",
+      );
+    }
   });
 
   lines.push(

@@ -5,6 +5,8 @@ import { useState } from "react";
 import { api } from "@/lib/client";
 
 type Opt = { id: string; name: string };
+type ImportSource = "roadmap" | "trello" | "github";
+type ImportMode = "path" | "paste" | "api";
 
 export function ImportForm({
   projects,
@@ -15,9 +17,12 @@ export function ImportForm({
 }) {
   const router = useRouter();
   const [target, setTarget] = useState(fixedProjectId ?? projects[0]?.id ?? "");
-  const [mode, setMode] = useState<"paste" | "path">("path");
+  const [source, setSource] = useState<ImportSource>("roadmap");
+  const [mode, setMode] = useState<ImportMode>("path");
   const [path, setPath] = useState("");
-  const [html, setHtml] = useState("");
+  const [contents, setContents] = useState("");
+  const [repo, setRepo] = useState("");
+  const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -32,12 +37,26 @@ export function ImportForm({
     setErr(null);
     setMsg(null);
     try {
-      const json = mode === "path" ? { path } : { roadmapHtml: html };
-      const res = await api<{ imported: number }>(`/api/projects/${target}/import`, {
-        method: "POST",
-        json,
-      });
-      setMsg(`Imported ${res.imported} item${res.imported === 1 ? "" : "s"} into ${target}.`);
+      if (source === "github") {
+        const res = await api<{ imported: number }>(`/api/projects/${target}/suggestions`, {
+          method: "POST",
+          json: mode === "api"
+            ? { source: "github", repo, token }
+            : { source: "github", githubJson: contents },
+        });
+        setMsg(`Imported ${res.imported} suggestion${res.imported === 1 ? "" : "s"} into ${target}.`);
+      } else {
+        const json = mode === "path"
+          ? { format: source, path }
+          : source === "trello"
+            ? { format: source, trelloJson: contents }
+            : { format: source, roadmapHtml: contents };
+        const res = await api<{ imported: number }>(`/api/projects/${target}/import`, {
+          method: "POST",
+          json,
+        });
+        setMsg(`Imported ${res.imported} item${res.imported === 1 ? "" : "s"} into ${target}.`);
+      }
       router.refresh();
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "Import failed");
@@ -61,37 +80,94 @@ export function ImportForm({
       )}
 
       <div>
-        <span className="field-label">Source</span>
+        <span className="field-label">Format</span>
         <div className="toolbar">
-          <button type="button" className={`btn btn-sm ${mode === "path" ? "btn-primary" : ""}`} onClick={() => setMode("path")}>
-            From file path
-          </button>
-          <button type="button" className={`btn btn-sm ${mode === "paste" ? "btn-primary" : ""}`} onClick={() => setMode("paste")}>
-            Paste HTML
-          </button>
+          {([
+            ["roadmap", "roadmap.html"],
+            ["trello", "Trello JSON"],
+            ["github", "GitHub"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              className={`btn btn-sm ${source === value ? "btn-primary" : ""}`}
+              onClick={() => {
+                setSource(value);
+                setMode(value === "github" ? "paste" : "path");
+                setMsg(null);
+                setErr(null);
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {mode === "path" ? (
+      <div>
+        <span className="field-label">Source</span>
+        <div className="toolbar">
+          {source !== "github" && (
+            <button type="button" className={`btn btn-sm ${mode === "path" ? "btn-primary" : ""}`} onClick={() => setMode("path")}>
+              From file path
+            </button>
+          )}
+          <button type="button" className={`btn btn-sm ${mode === "paste" ? "btn-primary" : ""}`} onClick={() => setMode("paste")}>
+            Paste
+          </button>
+          {source === "github" && (
+            <button type="button" className={`btn btn-sm ${mode === "api" ? "btn-primary" : ""}`} onClick={() => setMode("api")}>
+              GitHub API
+            </button>
+          )}
+        </div>
+      </div>
+
+      {source === "github" && mode === "api" ? (
+        <>
+          <div>
+            <label className="field-label" htmlFor="imp-repo">Repository</label>
+            <input
+              id="imp-repo"
+              className="input"
+              value={repo}
+              placeholder="owner/repo"
+              onChange={(e) => setRepo(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="field-label" htmlFor="imp-token">Token</label>
+            <input
+              id="imp-token"
+              className="input"
+              type="password"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+            />
+          </div>
+        </>
+      ) : mode === "path" ? (
         <div>
-          <label className="field-label" htmlFor="imp-path">Absolute path to roadmap.html</label>
+          <label className="field-label" htmlFor="imp-path">Absolute path</label>
           <input
             id="imp-path"
             className="input"
             value={path}
-            placeholder="/Users/you/Dev/ideaclyst/plans/roadmap.html"
+            placeholder={source === "trello" ? "/Users/you/Downloads/trello-board.json" : "/Users/you/Dev/ideaclyst/plans/roadmap.html"}
             onChange={(e) => setPath(e.target.value)}
           />
         </div>
       ) : (
         <div>
-          <label className="field-label" htmlFor="imp-html">roadmap.html contents</label>
+          <label className="field-label" htmlFor="imp-contents">
+            {source === "github" ? "GitHub JSON" : source === "trello" ? "Trello JSON" : "roadmap.html contents"}
+          </label>
           <textarea
-            id="imp-html"
+            id="imp-contents"
             className="textarea"
             style={{ minHeight: 160, fontFamily: "var(--font-mono)", fontSize: 12 }}
-            value={html}
-            onChange={(e) => setHtml(e.target.value)}
+            value={contents}
+            onChange={(e) => setContents(e.target.value)}
           />
         </div>
       )}
@@ -101,10 +177,10 @@ export function ImportForm({
 
       <div className="toolbar">
         <button type="submit" className="btn btn-primary" disabled={busy || !target}>
-          {busy ? "Importing…" : "Import roadmap"}
+          {busy ? "Importing…" : source === "github" ? "Import suggestions" : "Import items"}
         </button>
         <span className="muted" style={{ fontSize: 12.5 }}>
-          Re-importing the same file updates existing items (ids are preserved).
+          Re-importing keeps stable source ids.
         </span>
       </div>
     </form>

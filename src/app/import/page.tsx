@@ -10,10 +10,9 @@ export default async function ImportPage() {
       <div className="page-head">
         <div>
           <div className="page-kicker">Import</div>
-          <h1 className="page-title">Seed a project from roadmap.html</h1>
+          <h1 className="page-title">Import project work</h1>
           <p className="page-desc">
-            Reads the original kanban&apos;s <code style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>defaults</code>{" "}
-            array and creates a roadmap item per card, scored identically.
+            Bring in roadmap.html cards, Trello board exports, or GitHub issues as project suggestions.
           </p>
         </div>
       </div>

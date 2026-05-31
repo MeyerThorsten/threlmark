@@ -8,7 +8,7 @@
 import JSON5 from "json5";
 
 import { writeFileAtomic } from "../fsops";
-import { createItem } from "../items/store";
+import { upsertItem } from "../items/store";
 import { listItemViews } from "../items/store";
 import { roadmapMdPath } from "../paths";
 import { toCategory, toStatus } from "../schema/normalize";
@@ -79,7 +79,7 @@ export async function importRoadmapHtml(
   let imported = 0;
   for (const card of cards) {
     if (!card.title) continue;
-    await createItem(projectId, {
+    await upsertItem(projectId, {
       id: typeof card.id === "string" ? card.id : undefined,
       title: card.title,
       category: toCategory(card.category),

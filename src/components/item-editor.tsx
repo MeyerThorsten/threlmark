@@ -1,7 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { CATEGORIES, LANES, LANE_LABELS, type RoadmapItemView } from "@/lib/schema/types";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/client";
+import {
+  CATEGORIES,
+  LANES,
+  LANE_LABELS,
+  type CommentKind,
+  type ItemComment,
+  type RoadmapItemView,
+} from "@/lib/schema/types";
 import { priority } from "@/lib/priority";
 import { buildActivity } from "@/lib/activity";
 
@@ -38,6 +46,8 @@ export type ItemDraft = {
   files: string;
   acceptance: string[];
   labels: string[];
+  dueDate: string;
+  scheduledFor: string;
 };
 
 export function emptyDraft(): ItemDraft {
@@ -53,6 +63,8 @@ export function emptyDraft(): ItemDraft {
     files: "",
     acceptance: [],
     labels: [],
+    dueDate: "",
+    scheduledFor: "",
   };
 }
 
@@ -69,6 +81,8 @@ export function draftFromItem(item: RoadmapItemView): ItemDraft {
     files: item.files,
     acceptance: item.acceptance,
     labels: item.labels ?? [],
+    dueDate: item.dueDate ?? "",
+    scheduledFor: item.scheduledFor ?? "",
   };
 }
 
@@ -100,6 +114,26 @@ export function ItemEditor({
   const [err, setErr] = useState<string | null>(null);
   const [moveTo, setMoveTo] = useState("");
   const [labelsText, setLabelsText] = useState(initial.labels.join(", "));
+  const [comments, setComments] = useState<ItemComment[]>([]);
+  const [commentKind, setCommentKind] = useState<CommentKind>("comment");
+  const [commentBody, setCommentBody] = useState("");
+  const [commentAuthor, setCommentAuthor] = useState("");
+  const [commentBusy, setCommentBusy] = useState(false);
+
+  useEffect(() => {
+    if (!item) return;
+    let cancelled = false;
+    api<ItemComment[]>(`/api/projects/${item.projectId}/items/${item.id}/comments`)
+      .then((res) => {
+        if (!cancelled) setComments(res);
+      })
+      .catch(() => {
+        if (!cancelled) setComments([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [item]);
 
   const set = <K extends keyof ItemDraft>(k: K, v: ItemDraft[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -112,6 +146,28 @@ export function ItemEditor({
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong");
       setBusy(false);
+    }
+  }
+
+  async function addComment() {
+    if (!item || !commentBody.trim()) return;
+    setCommentBusy(true);
+    setErr(null);
+    try {
+      const created = await api<ItemComment>(`/api/projects/${item.projectId}/items/${item.id}/comments`, {
+        method: "POST",
+        json: {
+          kind: commentKind,
+          body: commentBody,
+          author: commentAuthor,
+        },
+      });
+      setComments((list) => [...list, created]);
+      setCommentBody("");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not add comment");
+    } finally {
+      setCommentBusy(false);
     }
   }
 
@@ -213,6 +269,29 @@ export function ItemEditor({
             />
           </div>
 
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div>
+              <label className="field-label" htmlFor="ie-scheduled">Scheduled</label>
+              <input
+                id="ie-scheduled"
+                className="input"
+                type="date"
+                value={draft.scheduledFor}
+                onChange={(e) => set("scheduledFor", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="ie-due">Due date</label>
+              <input
+                id="ie-due"
+                className="input"
+                type="date"
+                value={draft.dueDate}
+                onChange={(e) => set("dueDate", e.target.value)}
+              />
+            </div>
+          </div>
+
           <div>
             <label className="field-label" htmlFor="ie-labels">Labels (comma-separated)</label>
             <input
@@ -241,6 +320,61 @@ export function ItemEditor({
               }
             />
           </div>
+
+          {item && (
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+              <span className="field-label">Comments &amp; decisions</span>
+              <div className="comments-list">
+                {comments.length === 0 ? (
+                  <p className="muted" style={{ fontSize: 13, margin: 0 }}>No notes yet.</p>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="comment-row">
+                      <div className="comment-meta">
+                        <span className={`pill ${comment.kind === "decision" ? "pill-decision" : ""}`}>
+                          {comment.kind}
+                        </span>
+                        <span className="readout muted">{fmt(comment.createdAt)}</span>
+                      </div>
+                      <p>{comment.body}</p>
+                      {comment.author && <span className="muted" style={{ fontSize: 12 }}>{comment.author}</span>}
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="comment-form">
+                <select
+                  className="select"
+                  value={commentKind}
+                  onChange={(e) => setCommentKind(e.target.value as CommentKind)}
+                  aria-label="Comment kind"
+                >
+                  <option value="comment">Comment</option>
+                  <option value="decision">Decision</option>
+                </select>
+                <input
+                  className="input"
+                  value={commentAuthor}
+                  placeholder="Author"
+                  onChange={(e) => setCommentAuthor(e.target.value)}
+                />
+                <textarea
+                  className="textarea"
+                  value={commentBody}
+                  placeholder="Add a note"
+                  onChange={(e) => setCommentBody(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  disabled={commentBusy || !commentBody.trim()}
+                  onClick={addComment}
+                >
+                  Add note
+                </button>
+              </div>
+            </div>
+          )}
 
           {item && (
             <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
