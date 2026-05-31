@@ -87,6 +87,9 @@ export function InboxList({
               <div className="card-meta" style={{ marginTop: 0, marginBottom: 6 }}>
                 <span className="chip chip-source">↩ {s.source}</span>
                 <span className="chip">{s.category}</span>
+                {(s.labels ?? []).map((label) => (
+                  <span className="chip chip-label" key={label}>{label}</span>
+                ))}
               </div>
               <h3 style={{ fontSize: 16, marginBottom: 4 }}>{s.title}</h3>
               {s.description && <p className="muted" style={{ fontSize: 13 }}>{s.description}</p>}

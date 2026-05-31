@@ -25,6 +25,7 @@ export interface CreateItemInput {
   description?: string;
   files?: string;
   acceptance?: string[];
+  labels?: string[];
   source?: string;
   sharedRef?: string;
   /** Reuse an explicit id (used by the importer for idempotency). */

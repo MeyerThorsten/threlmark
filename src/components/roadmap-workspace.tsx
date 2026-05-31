@@ -46,6 +46,7 @@ type AddDraft = {
   category: string;
   description: string;
   files: string;
+  labels: string;
   impact: number;
   evidence: number;
   fit: number;
@@ -56,11 +57,21 @@ const emptyAdd = (): AddDraft => ({
   category: "Build",
   description: "",
   files: "",
+  labels: "",
   impact: 4,
   evidence: 3,
   fit: 4,
   effort: 3,
 });
+
+function labelsFromText(value: string): string[] | undefined {
+  const labels = value
+    .split(",")
+    .map((label) => label.trim())
+    .filter(Boolean);
+  const unique = [...new Set(labels)];
+  return unique.length ? unique : undefined;
+}
 
 export function RoadmapWorkspace({
   projectId,
@@ -89,6 +100,7 @@ export function RoadmapWorkspace({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [labelFilter, setLabelFilter] = useState("all");
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<Lane | null>(null);
   const [editing, setEditing] = useState<RoadmapItemView | null>(null);
@@ -130,10 +142,11 @@ export function RoadmapWorkspace({
             const id = r.itemId;
             setItems((m) => (m[id] ? { ...m, [id]: { ...m[id], status: "done" } } : m));
             setLanes((l) => {
+              const wasKnown = LANES.some((ln) => l[ln].includes(id));
               const next = Object.fromEntries(
                 LANES.map((ln) => [ln, l[ln].filter((x) => x !== id)]),
               ) as Record<Lane, string[]>;
-              if (!next.done.includes(id) && items[id]) next.done.push(id);
+              if (wasKnown && !next.done.includes(id)) next.done.push(id);
               return next;
             });
           }
@@ -146,9 +159,13 @@ export function RoadmapWorkspace({
     const t0 = setTimeout(tick, 800);
     const t = setInterval(() => { if (!stop) tick(); }, 5000);
     return () => { stop = true; clearTimeout(t0); clearInterval(t); };
-  }, [projectId, items]);
+  }, [projectId]);
 
-  const all = Object.values(items);
+  const all = useMemo(() => Object.values(items), [items]);
+  const labelOptions = useMemo(
+    () => [...new Set(all.flatMap((item) => item.labels ?? []))].sort((a, b) => a.localeCompare(b)),
+    [all],
+  );
 
   function flash(msg: string) {
     setToast(msg);
@@ -161,12 +178,14 @@ export function RoadmapWorkspace({
       .map((id) => items[id])
       .filter(Boolean)
       .filter((it) => categoryFilter === "all" || it.category === categoryFilter)
+      .filter((it) => labelFilter === "all" || (it.labels ?? []).includes(labelFilter))
       .filter(
         (it) =>
           !q ||
           it.title.toLowerCase().includes(q) ||
           it.description.toLowerCase().includes(q) ||
-          it.category.toLowerCase().includes(q),
+          it.category.toLowerCase().includes(q) ||
+          (it.labels ?? []).some((label) => label.toLowerCase().includes(q)),
       )
       .sort((a, b) => b.priority - a.priority);
   }
@@ -249,7 +268,7 @@ export function RoadmapWorkspace({
     if (!add.title.trim()) return;
     const created = await api<RoadmapItemView>(`/api/projects/${projectId}/items`, {
       method: "POST",
-      json: { ...add, status: "idea" },
+      json: { ...add, labels: labelsFromText(add.labels), status: "idea" },
     });
     setItems((m) => ({ ...m, [created.id]: created }));
     setLanes((l) => ({ ...l, idea: [...l.idea, created.id] }));
@@ -326,6 +345,10 @@ export function RoadmapWorkspace({
           <option value="all">All categories</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        <select className="select" style={{ width: 170 }} value={labelFilter} onChange={(e) => setLabelFilter(e.target.value)} aria-label="Label filter">
+          <option value="all">All labels</option>
+          {labelOptions.map((label) => <option key={label} value={label}>{label}</option>)}
+        </select>
         <button className="btn" onClick={rankAll}>Rank by score</button>
         <button className="btn btn-teal" onClick={() => pushTop(3)}>Push top 3</button>
         <button className="btn btn-primary" onClick={copyBrief}>Copy dev brief</button>
@@ -391,6 +414,9 @@ export function RoadmapWorkspace({
                               )}
                               {item.source && <span className="pill pill-source">↩ {item.source}</span>}
                               {item.sharedRef && <span className="pill pill-shared">⊞ shared</span>}
+                              {(item.labels ?? []).map((label) => (
+                                <span className="pill pill-label" key={label}>{label}</span>
+                              ))}
                               {isSel && <span className="pill selected">Selected</span>}
                             </div>
                           </div>
@@ -455,6 +481,7 @@ export function RoadmapWorkspace({
               </select>
               <textarea className="textarea" maxLength={420} placeholder="Problem, user value, and expected result" value={add.description} onChange={(e) => setAdd({ ...add, description: e.target.value })} />
               <input className="input" maxLength={180} placeholder="Likely files or modules" value={add.files} onChange={(e) => setAdd({ ...add, files: e.target.value })} />
+              <input className="input" maxLength={140} placeholder="Labels, comma-separated" value={add.labels} onChange={(e) => setAdd({ ...add, labels: e.target.value })} />
               {AXES.map((axis) => (
                 <div key={axis.key} style={{ display: "grid", gridTemplateColumns: "1fr 52px", gap: 8, alignItems: "center" }}>
                   <label className="field-label" style={{ margin: 0 }} htmlFor={`add-${axis.key}`}>
@@ -491,6 +518,7 @@ export function RoadmapWorkspace({
         <ItemEditor
           heading="Edit item"
           initial={draftFromItem(editing)}
+          item={editing}
           onSave={(d) => saveEdit(editing.id, d)}
           onCancel={() => setEditing(null)}
           onDelete={() => removeItem(editing.id)}

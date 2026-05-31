@@ -39,6 +39,14 @@ function toStringArray(value: unknown): string[] {
   return value.filter((v): v is string => typeof v === "string");
 }
 
+function toTrimmedUniqueStrings(value: unknown): string[] | undefined {
+  const out = toStringArray(value)
+    .map((v) => v.trim())
+    .filter(Boolean);
+  const unique = [...new Set(out)];
+  return unique.length ? unique : undefined;
+}
+
 function toAgent(value: unknown): Agent {
   return AGENTS.includes(value as Agent) ? (value as Agent) : "other";
 }
@@ -103,6 +111,7 @@ export function normalizeItem(
     description: _desc,
     files: _files,
     acceptance: _acc,
+    labels: _labels,
     transitions: _trans,
     handoff: _handoff,
     reports: _reports,
@@ -129,6 +138,7 @@ export function normalizeItem(
     description: typeof _desc === "string" ? _desc : "",
     files: typeof _files === "string" ? _files : "",
     acceptance: toStringArray(_acc),
+    labels: toTrimmedUniqueStrings(_labels),
     source: typeof raw.source === "string" ? raw.source : undefined,
     sharedRef: typeof raw.sharedRef === "string" ? raw.sharedRef : undefined,
     transitions: normalizeTransitions(_trans, status, createdAt),
@@ -159,6 +169,7 @@ export function normalizeSuggestion(
     effort: clampScore(raw.effort, 3),
     files: typeof raw.files === "string" ? raw.files : "",
     acceptance: toStringArray(raw.acceptance),
+    labels: toTrimmedUniqueStrings(raw.labels),
     targetProjectId:
       typeof raw.targetProjectId === "string" ? raw.targetProjectId : undefined,
     createdAt: typeof raw.createdAt === "string" ? raw.createdAt : now,

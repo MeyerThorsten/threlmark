@@ -85,6 +85,9 @@ export default async function PortfolioPage() {
                   <div style={{ display: "flex", gap: 6, marginTop: 4, alignItems: "center" }}>
                     <span className="chip">{entry.item.category}</span>
                     {entry.item.source && <span className="chip chip-source">↩ {entry.item.source}</span>}
+                    {(entry.item.labels ?? []).map((label) => (
+                      <span className="chip chip-label" key={label}>{label}</span>
+                    ))}
                     {entry.blocks > 0 && <span className="flag-block">⛔ blocks {entry.blocks}</span>}
                   </div>
                 </td>

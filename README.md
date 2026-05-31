@@ -130,6 +130,7 @@ Disk is the source of truth. External tools may read/write these exact shapes (a
 | `description` | string | |
 | `files` | string | comma-separated target files |
 | `acceptance` | string[] | acceptance criteria |
+| `labels` | string[]? | free-form tags for filtering/grouping cards |
 | `source` | string? | producing tool when accepted from a suggestion, e.g. `"ideaclyst"` |
 | `sharedRef` | string? | `"shared/<itemId>"` if this is a pointer to a shared item |
 | `transitions` | `{to,at}[]` | append-only lane history (seeded from `createdAt` for legacy items) |
@@ -141,7 +142,7 @@ Disk is the source of truth. External tools may read/write these exact shapes (a
 
 ### `suggestions/<sugId>.json` (what an external tool writes)
 
-Only **`source`** and **`title`** are required; everything else is defaulted on read. Set `targetProjectId` to have *accept* promote the item into a different project.
+Only **`source`** and **`title`** are required; everything else is defaulted on read. Optional `labels` are copied to the accepted item. Set `targetProjectId` to have *accept* promote the item into a different project.
 
 ```json
 { "source": "ideaclyst", "title": "Bulk export run dossiers", "impact": 5, "effort": 2 }
@@ -191,6 +192,7 @@ JSON
 
 - **Multi-project** — create / list / archive / switch projects; cross-project Portfolio.
 - **Per-project kanban** — four lanes, drag-between-lanes, 4-axis scoring + computed priority, categories.
+- **Labels & filters** — tag items/suggestions with free-form labels, filter a board by label, and carry labels into handoff briefs.
 - **Roadmap Lab workflow** — search, category filter, *Rank by score*, *Push top 3*, inline Add Item, on-card sliders, card selection → live Queue/Markdown/JSON brief, *Copy dev brief*.
 - **Import** — read the original `roadmap.html` `defaults` array (idempotent).
 - **Handoff** — export selected items as file-scoped Claude/Codex prompts with acceptance checkboxes + verification commands, or as Markdown/JSON.

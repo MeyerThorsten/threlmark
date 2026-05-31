@@ -53,6 +53,7 @@ export interface ParsedCard {
   description?: string;
   files?: string;
   acceptance?: string[];
+  labels?: string[];
 }
 
 export function parseRoadmapHtml(html: string): ParsedCard[] {
@@ -90,6 +91,7 @@ export async function importRoadmapHtml(
       description: card.description ?? "",
       files: card.files ?? "",
       acceptance: Array.isArray(card.acceptance) ? card.acceptance : [],
+      labels: Array.isArray(card.labels) ? card.labels : undefined,
     });
     imported++;
   }

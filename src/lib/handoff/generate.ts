@@ -64,6 +64,7 @@ export function toQueueText(items: RoadmapItemView[]): string {
       [
         `${i + 1}. ${item.title} (${item.category})`,
         `Priority: ${item.priority} | Impact ${item.impact} | Evidence ${item.evidence} | Fit ${item.fit} | Effort ${item.effort}`,
+        item.labels?.length ? `Labels: ${item.labels.join(", ")}` : "",
         item.description,
         `Files: ${item.files || "TBD"}`,
         "",
@@ -101,6 +102,7 @@ export function toMarkdown(
       `- **Priority:** ${item.priority} (impact ${item.impact}, evidence ${item.evidence}, fit ${item.fit}, effort ${item.effort})`,
       `- **Category:** ${item.category}`,
       `- **Lane:** ${item.status}`,
+      item.labels?.length ? `- **Labels:** ${item.labels.join(", ")}` : "",
       item.source ? `- **Source:** ${item.source}` : "",
       "",
       item.description || "_No description provided._",

@@ -3,6 +3,21 @@
 import { useState } from "react";
 import { CATEGORIES, LANES, LANE_LABELS, type RoadmapItemView } from "@/lib/schema/types";
 import { priority } from "@/lib/priority";
+import { buildActivity } from "@/lib/activity";
+
+const KIND_GLYPH: Record<string, string> = {
+  create: "✦",
+  move: "→",
+  handoff: "⇥",
+  report: "🤖",
+};
+
+function fmt(at: string): string {
+  const d = new Date(at);
+  return Number.isNaN(d.getTime())
+    ? at
+    : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
 const AXES = [
   { key: "impact", label: "Impact" },
@@ -22,6 +37,7 @@ export type ItemDraft = {
   description: string;
   files: string;
   acceptance: string[];
+  labels: string[];
 };
 
 export function emptyDraft(): ItemDraft {
@@ -36,6 +52,7 @@ export function emptyDraft(): ItemDraft {
     description: "",
     files: "",
     acceptance: [],
+    labels: [],
   };
 }
 
@@ -51,6 +68,7 @@ export function draftFromItem(item: RoadmapItemView): ItemDraft {
     description: item.description,
     files: item.files,
     acceptance: item.acceptance,
+    labels: item.labels ?? [],
   };
 }
 
@@ -67,6 +85,7 @@ export function ItemEditor({
   onCancel,
   onDelete,
   crossProject,
+  item,
 }: {
   initial: ItemDraft;
   heading: string;
@@ -74,11 +93,13 @@ export function ItemEditor({
   onCancel: () => void;
   onDelete?: () => Promise<void>;
   crossProject?: CrossProjectControls;
+  item?: RoadmapItemView;
 }) {
   const [draft, setDraft] = useState<ItemDraft>(initial);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [moveTo, setMoveTo] = useState("");
+  const [labelsText, setLabelsText] = useState(initial.labels.join(", "));
 
   const set = <K extends keyof ItemDraft>(k: K, v: ItemDraft[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -193,6 +214,23 @@ export function ItemEditor({
           </div>
 
           <div>
+            <label className="field-label" htmlFor="ie-labels">Labels (comma-separated)</label>
+            <input
+              id="ie-labels"
+              className="input"
+              value={labelsText}
+              placeholder="trello, collaboration, import"
+              onChange={(e) => {
+                setLabelsText(e.target.value);
+                set(
+                  "labels",
+                  [...new Set(e.target.value.split(",").map((label) => label.trim()).filter(Boolean))],
+                );
+              }}
+            />
+          </div>
+
+          <div>
             <label className="field-label" htmlFor="ie-acc">Acceptance criteria (one per line)</label>
             <textarea
               id="ie-acc"
@@ -203,6 +241,24 @@ export function ItemEditor({
               }
             />
           </div>
+
+          {item && (
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+              <span className="field-label">Activity</span>
+              <div className="activity">
+                {buildActivity(item).map((a, i) => (
+                  <div key={i} className="activity-item">
+                    <span className="activity-glyph">{KIND_GLYPH[a.kind]}</span>
+                    <span className="activity-body">
+                      <span>{a.label}</span>
+                      {a.detail && <span className="activity-detail">{a.detail}</span>}
+                    </span>
+                    <span className="activity-at readout">{fmt(a.at)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {crossProject && (
             <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>

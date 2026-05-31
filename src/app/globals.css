@@ -262,6 +262,7 @@ a { color: inherit; text-decoration: none; }
 }
 .chip-source, .pill-source { color: var(--teal); background: #ecfdf5; border-color: #b6e8ca; }
 .chip-shared, .pill-shared { color: var(--gold); background: #fff7ed; border-color: #fed7aa; }
+.chip-label, .pill-label { color: #475467; background: #f1f5f9; border-color: #cbd5e1; }
 .pill.done { color: var(--green); background: #ecfdf5; border-color: #b6e8ca; }
 .pill.dev { color: var(--ember); background: #eef2ff; border-color: #c7d2fe; }
 .pill.rank { color: var(--gold); background: #fffbeb; border-color: #fde68a; }
@@ -424,6 +425,15 @@ a { color: inherit; text-decoration: none; }
 .flow-bar-val { font-family: var(--font-mono); font-size: 10px; color: var(--muted); height: 14px; }
 .flow-bar { width: 100%; max-width: 30px; min-height: 2px; border-radius: 4px 4px 0 0; transition: height 0.2s; }
 .flow-bar-lbl { margin-top: 6px; font-family: var(--font-mono); font-size: 9px; color: var(--faint); }
+
+/* ---------- Activity timeline ---------- */
+.activity { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 220px; overflow-y: auto; }
+.activity-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
+.activity-glyph { flex: none; width: 20px; text-align: center; color: var(--muted); }
+.activity-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.activity-body > span:first-child { color: var(--text-strong); }
+.activity-detail { color: var(--muted); font-size: 12px; }
+.activity-at { flex: none; color: var(--faint); font-size: 11px; white-space: nowrap; }
 
 /* ---------- Misc ---------- */
 .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }

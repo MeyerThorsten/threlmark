@@ -16,9 +16,11 @@ export function roadmapMarkdown(projectId: string, items: RoadmapItemView[]): st
       continue;
     }
     for (const item of laneItems) {
+      const labelText = item.labels?.length ? ` · labels ${item.labels.join(", ")}` : "";
       lines.push(
         `- **${item.title}** · priority ${item.priority} · ${item.category}` +
-          (item.source ? ` · from ${item.source}` : ""),
+          (item.source ? ` · from ${item.source}` : "") +
+          labelText,
       );
       if (item.description) lines.push(`  - ${item.description}`);
       if (item.files) lines.push(`  - Files: ${item.files}`);

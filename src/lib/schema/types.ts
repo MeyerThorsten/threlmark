@@ -121,6 +121,8 @@ export interface RoadmapItem {
   /** Comma-separated target files (verbatim seed shape). */
   files: string;
   acceptance: string[];
+  /** Free-form labels for filtering and grouping cards. */
+  labels?: string[];
   /** Producing tool when accepted from a suggestion, e.g. "ideaclyst". */
   source?: string;
   /** If set ("shared/<itemId>"), this is a local pointer to a shared item. */
@@ -164,6 +166,8 @@ export interface Suggestion {
   effort?: number;
   files?: string;
   acceptance?: string[];
+  /** Free-form labels copied onto the accepted roadmap item. */
+  labels?: string[];
   /** If set, accept promotes the item into THAT project (cross-project). */
   targetProjectId?: string;
   createdAt?: string;

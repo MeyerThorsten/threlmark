@@ -75,6 +75,7 @@ export async function acceptSuggestion(
     description: suggestion.description,
     files: suggestion.files,
     acceptance: suggestion.acceptance,
+    labels: suggestion.labels,
     source: suggestion.source,
     status: "idea",
   };
