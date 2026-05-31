@@ -46,3 +46,6 @@ next-env.d.ts
 # Local env / secrets (safety)
 .env*
 !.env.example
+
+# Articles are website content, never in the repo
+/docs/articles/
