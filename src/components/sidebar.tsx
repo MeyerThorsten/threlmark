@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { ThemeToggle } from "./theme-toggle";
 
 type NavProject = {
@@ -14,6 +15,30 @@ type NavProject = {
 
 export function Sidebar({ projects }: { projects: NavProject[] }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  async function removeProject(project: NavProject) {
+    if (removingId) return;
+    const confirmed = window.confirm(
+      `Remove "${project.name}" from the list?\n\nIt is archived (not deleted) — its data stays on disk and you can restore it later.`,
+    );
+    if (!confirmed) return;
+    setRemovingId(project.id);
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`Archive failed (${res.status})`);
+      if (pathname.startsWith(`/projects/${project.id}`)) {
+        router.push("/");
+      } else {
+        router.refresh();
+      }
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Could not remove project");
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   return (
     <aside className="sidebar">
@@ -55,30 +80,42 @@ export function Sidebar({ projects }: { projects: NavProject[] }) {
       )}
       {projects.map((p) => {
         const active = pathname.startsWith(`/projects/${p.id}`);
+        const removing = removingId === p.id;
         return (
-          <Link
-            key={p.id}
-            href={`/projects/${p.id}`}
-            className={`nav-link ${active ? "active" : ""}`}
-          >
-            <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <span
-                className="dot"
-                style={{ background: p.color || "var(--ember)" }}
-              />
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {p.name}
-              </span>
-            </span>
-            <span className="count">
-              {p.inbox > 0 && (
-                <span style={{ color: "var(--teal)" }} title={`${p.inbox} in inbox`}>
-                  ●{p.inbox}{" "}
+          <div key={p.id} className={`nav-row ${removing ? "removing" : ""}`}>
+            <Link
+              href={`/projects/${p.id}`}
+              className={`nav-link ${active ? "active" : ""}`}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span
+                  className="dot"
+                  style={{ background: p.color || "var(--ember)" }}
+                />
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {p.name}
                 </span>
-              )}
-              {p.items}
-            </span>
-          </Link>
+              </span>
+              <span className="count">
+                {p.inbox > 0 && (
+                  <span style={{ color: "var(--teal)" }} title={`${p.inbox} in inbox`}>
+                    ●{p.inbox}{" "}
+                  </span>
+                )}
+                {p.items}
+              </span>
+            </Link>
+            <button
+              type="button"
+              className="nav-remove"
+              title={`Remove ${p.name} from the list (archives it)`}
+              aria-label={`Remove ${p.name} from the list`}
+              disabled={removing}
+              onClick={() => removeProject(p)}
+            >
+              {removing ? "…" : "×"}
+            </button>
+          </div>
         );
       })}
 
