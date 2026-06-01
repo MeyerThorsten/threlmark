@@ -152,6 +152,9 @@ export interface RoadmapItem {
   handoff?: HandoffStamp;
   /** Automatic status/result reports posted by agents. */
   reports?: AgentReport[];
+  /** What was actually built — the development outcome/result, recorded when the
+   *  item reaches Done (manually, or auto-filled from a `done` agent report). */
+  outcome?: string;
   createdAt: string;
   updatedAt: string;
   /** Unknown keys are preserved on read-merge-write for forward-compat. */

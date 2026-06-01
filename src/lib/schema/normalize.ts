@@ -125,6 +125,7 @@ export function normalizeItem(
     transitions: _trans,
     handoff: _handoff,
     reports: _reports,
+    outcome: _outcome,
     createdAt: _created,
     updatedAt: _updated,
     ...rest
@@ -156,6 +157,7 @@ export function normalizeItem(
     transitions: normalizeTransitions(_trans, status, createdAt),
     handoff: normalizeHandoff(_handoff),
     reports: normalizeReports(_reports),
+    outcome: typeof _outcome === "string" && _outcome.trim() ? _outcome.trim() : undefined,
     createdAt,
     updatedAt: typeof _updated === "string" ? _updated : now,
   };

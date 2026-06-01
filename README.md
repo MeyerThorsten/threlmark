@@ -141,6 +141,7 @@ Disk is the source of truth. External tools may read/write these exact shapes (a
 | `transitions` | `{to,at}[]` | append-only lane history (seeded from `createdAt` for legacy items) |
 | `handoff` | `{handoffId,agent,at}`? | set when handed to an agent via a brief |
 | `reports` | `{at,agent,status,summary,verification?}[]`? | agent report-back log (`done` auto-moves to Done) |
+| `outcome` | string? | what was built; set when the item reaches Done (auto-filled from a `done` report's summary, or edited by hand) |
 | `createdAt`/`updatedAt` | ISO string | |
 
 `priority` is **never** stored — it is computed on read so it can't drift. New fields are additive: legacy items missing `transitions`/`handoff` and external tools that ignore them keep working (unknown keys are preserved).
@@ -172,7 +173,7 @@ The UI and external tools call the same store functions through these routes.
 | `POST` | `/api/projects/:id/suggestions/:sugId/accept` | `{targetProjectId?}` → item |
 | `POST` | `/api/projects/:id/suggestions/:sugId/dismiss` | → `.dismissed/` |
 | `POST` | `/api/projects/:id/import` | `{format:"roadmap"\|"trello"}` + `{roadmapHtml\|trelloJson\|path}` |
-| `POST` | `/api/projects/:id/handoff` | `{itemIds, format}` (+ `record, agent, moveToDevelopment` to log a handoff) |
+| `POST` | `/api/projects/:id/handoff` | `{itemIds, format}` (+ `record, agent, moveToDevelopment` to log a handoff). Omit `itemIds` → all Development-lane items (powers **Develop all**). |
 | `GET` | `/api/projects/:id/handoffs` | recorded handoffs |
 | `POST` | `/api/projects/:id/items/:itemId/report` | agent report-back `{agent, status, summary, verification?}` (`done` auto-moves to Done) |
 | `GET` | `/api/projects/:id/reports` | ingest dropped report files + list recent reports (board polls this) |
@@ -208,8 +209,8 @@ JSON
 - **Inbox** — surface `suggestions/<id>.json`, accept (→ item with `source`) or dismiss; cross-project promote.
 - **Cross-project** — move items between projects, link/depend, share one item across projects.
 - **Flow** — WIP limits per lane, work-item-age / stale badges, a **Flow** tab (throughput, cycle time, aging) and a portfolio flow strip.
-- **Agent flow** — record handoffs to Claude/Codex and track brief → shipped, agent throughput, and stalled briefs.
-- **Agent report-back** — briefs instruct the agent to report status automatically; a `done` report auto-moves the card to Done with a live toast (closed loop, no manual step).
+- **Agent flow** — record handoffs to Claude/Codex and track brief → shipped, agent throughput, and stalled briefs. **Develop all** in the project header hands off the *entire* Development lane to an agent in one click — combined brief generated, handoff recorded, brief copied to your clipboard.
+- **Agent report-back** — briefs instruct the agent to report status automatically; a `done` report auto-moves the card to Done with a live toast (closed loop, no manual step) and records what was built into the item's **`outcome`** field.
 - **Dark mode** — a light/dark theme toggle in the sidebar; the choice is remembered locally and applied before first paint (no flash).
 - **Local-first** — no cloud, no accounts, no secrets.
 

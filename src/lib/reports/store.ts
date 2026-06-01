@@ -47,7 +47,14 @@ export async function recordReport(
     summary: typeof input.summary === "string" ? input.summary : "",
     verification: typeof input.verification === "string" ? input.verification : undefined,
   };
-  await updateItem(projectId, itemId, { reports: [...(current.reports ?? []), report] });
+  const patch: Parameters<typeof updateItem>[2] = {
+    reports: [...(current.reports ?? []), report],
+  };
+  // A `done` report records what was built into `outcome` (unless already set).
+  if (report.status === "done" && report.summary.trim() && !current.outcome) {
+    patch.outcome = report.summary.trim();
+  }
+  await updateItem(projectId, itemId, patch);
   if (report.status === "done" && current.status !== "done") {
     return moveLane(projectId, itemId, "done");
   }

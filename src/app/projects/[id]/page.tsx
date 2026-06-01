@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { DevelopAllButton } from "@/components/develop-all-button";
 import { ProjectNav } from "@/components/project-nav";
 import { RemoveProjectButton } from "@/components/remove-project-button";
 import { RoadmapWorkspace } from "@/components/roadmap-workspace";
@@ -47,6 +48,7 @@ export default async function ProjectBoardPage({
           </h1>
           {project.description && <p className="page-desc">{project.description}</p>}
           <div className="toolbar" style={{ marginTop: 14 }}>
+            <DevelopAllButton projectId={id} devCount={metrics.development} />
             <Link href={`/projects/${id}/handoff`} className="btn btn-sm">⇥ Handoff brief</Link>
             <Link href={`/projects/${id}/import`} className="btn btn-sm">↧ Import</Link>
             <RemoveProjectButton projectId={id} projectName={project.name} />

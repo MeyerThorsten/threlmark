@@ -48,6 +48,7 @@ export type ItemDraft = {
   labels: string[];
   dueDate: string;
   scheduledFor: string;
+  outcome: string;
 };
 
 export function emptyDraft(): ItemDraft {
@@ -65,6 +66,7 @@ export function emptyDraft(): ItemDraft {
     labels: [],
     dueDate: "",
     scheduledFor: "",
+    outcome: "",
   };
 }
 
@@ -83,6 +85,7 @@ export function draftFromItem(item: RoadmapItemView): ItemDraft {
     labels: item.labels ?? [],
     dueDate: item.dueDate ?? "",
     scheduledFor: item.scheduledFor ?? "",
+    outcome: item.outcome ?? "",
   };
 }
 
@@ -318,6 +321,17 @@ export function ItemEditor({
               onChange={(e) =>
                 set("acceptance", e.target.value.split("\n").map((l) => l.trim()).filter(Boolean))
               }
+            />
+          </div>
+
+          <div>
+            <label className="field-label" htmlFor="ie-outcome">Outcome / what was built</label>
+            <textarea
+              id="ie-outcome"
+              className="textarea"
+              placeholder="Recorded when the item reaches Done — auto-filled from a Claude/Codex “done” report, or write it yourself."
+              value={draft.outcome}
+              onChange={(e) => set("outcome", e.target.value)}
             />
           </div>
 
