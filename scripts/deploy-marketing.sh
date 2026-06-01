@@ -40,8 +40,13 @@ case "$FTP_PATH" in */) ;; *) FTP_PATH="$FTP_PATH/" ;; esac
 CURL_BASE=(curl -fsS --ftp-ssl-control --disable-epsv --ftp-create-dirs
   --retry 2 --retry-delay 2 --connect-timeout 20 --user "$FTP_USER:$FTP_PASS")
 
-# Every regular file under site/, structure preserved, junk excluded.
-mapfile -t files < <(cd site && find . -type f ! -name '.DS_Store' | sed 's|^\./||' | sort)
+# Servable static assets under site/, structure preserved. Excludes junk and
+# .md source (e.g. site/articles/*.md are article sources, not served pages).
+# Portable array fill (no mapfile — macOS ships bash 3.2).
+files=()
+while IFS= read -r f; do files+=("$f"); done < <(
+  cd site && find . -type f ! -name '.DS_Store' ! -name '*.md' | sed 's|^\./||' | sort
+)
 [ "${#files[@]}" -gt 0 ] || { echo "✗ no files under site/ to deploy" >&2; exit 1; }
 
 echo "→ ${#files[@]} files → ${FTP_HOST}${FTP_PATH} (FTPS, control-channel TLS)"
