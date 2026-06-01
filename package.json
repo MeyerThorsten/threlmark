@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy:marketing": "bash scripts/deploy-marketing.sh"
   },
   "dependencies": {
     "json5": "^2.2.3",
