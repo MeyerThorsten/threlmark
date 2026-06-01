@@ -196,36 +196,48 @@ a { color: inherit; text-decoration: none; }
 .nav-link .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .nav-link .count { font-family: var(--font-mono); font-size: 11px; color: var(--faint); font-weight: 700; }
 
-.nav-row { position: relative; }
-.nav-remove {
-  position: absolute;
-  top: 50%;
-  right: 6px;
-  transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
+/* Deliberate "remove project" affordance in the project header. Subtle by
+   default so it is hard to hit by accident; turns danger-red on hover. */
+.btn-danger-ghost {
+  color: var(--faint);
+  border-color: transparent;
+  background: transparent;
+}
+.btn-danger-ghost:hover {
+  color: var(--rose);
+  border-color: var(--rose);
+  background: #fef2f2;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
   display: grid;
   place-items: center;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+}
+.modal-card {
+  width: 100%;
+  max-width: 440px;
   background: var(--surface);
-  color: var(--faint);
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.12s, color 0.12s, border-color 0.12s, background 0.12s;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 22px;
 }
-.nav-row:hover .nav-remove,
-.nav-row:focus-within .nav-remove,
-.nav-row.removing .nav-remove {
-  opacity: 1;
-  pointer-events: auto;
+.modal-card h2 { font-size: 17px; margin: 0 0 6px; color: var(--text-strong); }
+.modal-card .modal-body { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+.modal-card .modal-confirm-name { font-weight: 700; color: var(--text-strong); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.btn-danger {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: #fff;
 }
-.nav-remove:hover { color: var(--rose); border-color: var(--rose); background: #fef2f2; }
-.nav-remove:disabled { cursor: default; color: var(--faint); }
+.btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .main-col { min-width: 0; display: flex; flex-direction: column; min-height: 100vh; }
 .main { min-width: 0; padding: 30px 34px 48px; flex: 1; }

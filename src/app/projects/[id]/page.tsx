@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ProjectNav } from "@/components/project-nav";
+import { RemoveProjectButton } from "@/components/remove-project-button";
 import { RoadmapWorkspace } from "@/components/roadmap-workspace";
 import { getBoard } from "@/lib/board/store";
 import { listItemViews } from "@/lib/items/store";
@@ -48,6 +49,7 @@ export default async function ProjectBoardPage({
           <div className="toolbar" style={{ marginTop: 14 }}>
             <Link href={`/projects/${id}/handoff`} className="btn btn-sm">⇥ Handoff brief</Link>
             <Link href={`/projects/${id}/import`} className="btn btn-sm">↧ Import</Link>
+            <RemoveProjectButton projectId={id} projectName={project.name} />
           </div>
         </div>
         <aside className="summary-card panel" aria-label="Roadmap summary" style={{ minWidth: 300 }}>

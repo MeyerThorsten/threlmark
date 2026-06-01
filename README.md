@@ -196,7 +196,7 @@ JSON
 
 ## Features
 
-- **Multi-project** — create / list / switch projects and a cross-project Portfolio. **Remove a project straight from the sidebar** (hover a row → ×); it's archived, not deleted — the data stays on disk under `archive/` and can be restored.
+- **Multi-project** — create / list / switch projects and a cross-project Portfolio. **Remove a project** from its header (next to the title): a deliberate, type-the-name confirmation guards it, and it's archived — not deleted — so the data stays on disk under `archive/` and can be restored.
 - **Per-project kanban** — four lanes, drag-between-lanes, 4-axis scoring + computed priority, categories.
 - **Labels & filters** — tag items/suggestions with free-form labels, filter a board by label, and carry labels into handoff briefs.
 - **Due dates & scheduling** — give an item a `scheduledFor` start and a `dueDate`; the board flags **overdue** cards (and the Flow view counts them) until they reach Done.
