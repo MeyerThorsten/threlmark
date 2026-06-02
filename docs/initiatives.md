@@ -60,6 +60,21 @@ Because focus is just the label filter, an initiative composes with everything e
 
 That's the whole workflow: **add a label → it's an initiative with progress → click to focus.** No project to create, no migration, no extra screen.
 
+## Push a whole initiative into development
+
+Once an initiative is ready to build, you can move all of its items into the Development
+lane at once instead of pushing cards one by one:
+
+1. **Focus** the initiative (click its chip, or pick the label in the filter).
+2. Click **Select filtered** — every currently-visible, not-yet-shipped item (respecting the
+   search + category + label filters) is added to the selection. Toggle individual cards with
+   their **Select** button to refine which ones go.
+3. Click **Push N → Development** — the selected items move to Development in one batch (a
+   single optimistic update, then a board re-sync from disk), and the selection clears. Use
+   **Clear** to drop the selection without moving anything.
+
+From there, **Develop all** hands off everything in Development to an agent as one brief.
+
 ## Data model note
 
 - **`labels: string[]` is unchanged and remains the only storage.** Initiatives add **no** field, file, route, or schema version bump. The item schema, `items/<itemId>.json`, and the REST API are all exactly as documented in the [README](../README.md#the-shared-data-contract).

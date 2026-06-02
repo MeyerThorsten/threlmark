@@ -324,6 +324,66 @@ export function RoadmapWorkspace({
     flash(`${candidates.length} pushed to Development`);
   }
 
+  /** True when an item passes the current search + category + label filters. */
+  function matchesFilters(it: RoadmapItemView): boolean {
+    const q = search.trim().toLowerCase();
+    if (categoryFilter !== "all" && it.category !== categoryFilter) return false;
+    if (labelFilter !== "all" && !(it.labels ?? []).includes(labelFilter)) return false;
+    if (!q) return true;
+    return (
+      it.title.toLowerCase().includes(q) ||
+      it.description.toLowerCase().includes(q) ||
+      it.category.toLowerCase().includes(q) ||
+      (it.labels ?? []).some((label) => label.toLowerCase().includes(q))
+    );
+  }
+
+  /** Add every currently-filtered, not-yet-shipped item to the selection. */
+  function selectFiltered() {
+    const ids = all
+      .filter((it) => it.status !== "development" && it.status !== "done" && matchesFilters(it))
+      .map((it) => it.id);
+    if (ids.length === 0) return flash("Nothing to select");
+    setSelected((s) => new Set([...s, ...ids]));
+    flash(`${ids.length} selected`);
+  }
+
+  /** Move every selected item into Development in one batch (single optimistic
+   *  update + sequential server moves, then re-sync the board from disk). */
+  async function pushSelectedToDevelopment() {
+    const ids = [...selected].filter((id) => items[id] && items[id].status !== "development");
+    if (ids.length === 0) return flash("No selected items to push");
+    const idSet = new Set(ids);
+    const next = Object.fromEntries(
+      LANES.map((l) => [l, lanes[l].filter((x) => !idSet.has(x))]),
+    ) as Record<Lane, string[]>;
+    next.development = [...next.development, ...ids];
+    setLanes(next);
+    setItems((m) => {
+      const c = { ...m };
+      for (const id of ids) c[id] = { ...c[id], status: "development" };
+      return c;
+    });
+    setSelected(new Set());
+    flash(`Pushing ${ids.length} to Development…`);
+    try {
+      for (const id of ids) {
+        await api(`/api/projects/${projectId}/items/${id}/move`, {
+          method: "POST",
+          json: { toLane: "development" },
+        });
+      }
+      const board = await api<Board>(`/api/projects/${projectId}/board`);
+      setLanes(board.lanes);
+      flash(`${ids.length} pushed to Development`);
+      router.refresh();
+    } catch {
+      const board = await api<Board>(`/api/projects/${projectId}/board`).catch(() => null);
+      if (board) setLanes(board.lanes);
+      flash("Bulk move failed — board re-synced");
+    }
+  }
+
   async function saveEdit(id: string, draft: ItemDraft) {
     const updated = await patchItem(id, draft as Partial<RoadmapItemView>);
     setEditing(null);
@@ -380,6 +440,15 @@ export function RoadmapWorkspace({
         </select>
         <button className="btn" onClick={rankAll}>Rank by score</button>
         <button className="btn btn-teal" onClick={() => pushTop(3)}>Push top 3</button>
+        <button className="btn" onClick={selectFiltered} title="Select all items matching the current filters">Select filtered</button>
+        {selected.size > 0 && (
+          <>
+            <button className="btn btn-teal" onClick={pushSelectedToDevelopment}>
+              Push {selected.size} → Development
+            </button>
+            <button className="btn" onClick={() => setSelected(new Set())}>Clear ({selected.size})</button>
+          </>
+        )}
         <button className="btn btn-primary" onClick={copyBrief}>Copy dev brief</button>
         <button className="btn" onClick={() => setShowSettings(true)} aria-label="Workflow settings" title="WIP limits & lane policies">⚙</button>
       </section>
