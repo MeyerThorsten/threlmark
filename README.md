@@ -202,10 +202,11 @@ JSON
 - **Per-project kanban** — four lanes, drag-between-lanes, 4-axis scoring + computed priority, categories.
 - **Labels & filters** — tag items/suggestions with free-form labels, filter a board by label, and carry labels into handoff briefs.
 - **Initiatives** — an item's `labels` are surfaced as first-class, trackable sub-roadmaps inside a project: an Initiatives strip shows each label with progress (done/total, %) and click-to-focus (it drives the existing label filter). Lets a "vNext"-style push live *inside* the real project instead of a separate one — no schema/API change, `labels` stay the storage. See [`docs/initiatives.md`](docs/initiatives.md).
+- **Bulk push by label** — filter the board by a label (or click its initiative chip), hit **Select filtered** to select every matching not-yet-shipped card, fine-tune with each card's **Select** toggle, then **Push N → Development** to move the whole batch in one go. Pair it with **Develop all** to hand the lane straight to an agent.
 - **Due dates & scheduling** — give an item a `scheduledFor` start and a `dueDate`; the board flags **overdue** cards (and the Flow view counts them) until they reach Done.
 - **Comments & decision notes** — append-only notes on any item, typed as a plain *comment* or a *decision* record, kept on disk alongside the card.
 - **Activity timeline** — every item detail shows a derived history (created, lane moves, handoff, reports, comments) so the trail of work is always visible.
-- **Roadmap Lab workflow** — search, category filter, *Rank by score*, *Push top 3*, inline Add Item, on-card sliders, card selection → live Queue/Markdown/JSON brief, *Copy dev brief*.
+- **Roadmap Lab workflow** — search, category + label filter, *Rank by score*, *Push top 3*, *Select filtered* → *Push N → Development*, inline Add Item, on-card sliders, card selection → live Queue/Markdown/JSON brief, *Copy dev brief*.
 - **Import** — pull in an existing roadmap three ways: the original `roadmap.html` `defaults` array, a **Trello** board export (lists → lanes, labels, due dates, checklists → acceptance), or **GitHub** issues/projects (live via the API or pasted JSON) into the Inbox. All idempotent — re-import updates by stable source id instead of duplicating.
 - **Handoff** — export selected items as file-scoped Claude/Codex prompts with acceptance checkboxes + verification commands, or as Markdown/JSON.
 - **Inbox** — surface `suggestions/<id>.json`, accept (→ item with `source`) or dismiss; cross-project promote.
