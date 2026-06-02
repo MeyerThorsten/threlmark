@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client";
 import { generateHandoff, type HandoffFormat } from "@/lib/handoff/generate";
+import { summarizeInitiatives } from "@/lib/initiatives";
 import { humanAge, humanDate, itemAgeMs, isOverdue, isStale } from "@/lib/flow";
 import { priority } from "@/lib/priority";
 import {
@@ -168,6 +169,7 @@ export function RoadmapWorkspace({
     () => [...new Set(all.flatMap((item) => item.labels ?? []))].sort((a, b) => a.localeCompare(b)),
     [all],
   );
+  const initiatives = useMemo(() => summarizeInitiatives(all), [all]);
 
   function flash(msg: string) {
     setToast(msg);
@@ -381,6 +383,32 @@ export function RoadmapWorkspace({
         <button className="btn btn-primary" onClick={copyBrief}>Copy dev brief</button>
         <button className="btn" onClick={() => setShowSettings(true)} aria-label="Workflow settings" title="WIP limits & lane policies">⚙</button>
       </section>
+
+      {initiatives.length > 0 && (
+        <section className="initiatives" aria-label="Initiatives">
+          {initiatives.map((init) => {
+            const active = labelFilter === init.label;
+            return (
+              <button
+                key={init.label}
+                type="button"
+                className={`initiative-chip ${active ? "active" : ""}`}
+                aria-pressed={active}
+                aria-label={`${active ? "Clear focus on" : "Focus on"} initiative ${init.label}: ${init.done} of ${init.total} done, ${init.pctDone}%`}
+                onClick={() => setLabelFilter(active ? "all" : init.label)}
+                title={`${init.label}: ${init.done}/${init.total} done (${init.pctDone}%)`}
+              >
+                <span className="initiative-label">{init.label}</span>
+                <span className="initiative-progress">{init.done}/{init.total}</span>
+                <span className="initiative-pct">{init.pctDone}%</span>
+                <span className="initiative-bar" aria-hidden="true">
+                  <span className="initiative-bar-fill" style={{ width: `${init.pctDone}%` }} />
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      )}
 
       <div className="workspace">
         {/* Lanes */}

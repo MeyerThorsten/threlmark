@@ -55,6 +55,7 @@ The root is *home-based, not repo-relative*, on purpose — it's a shared hub th
 | **Portfolio** | Cross-project ranking of every item by status-weighted priority. |
 | **Shared item** | One canonical card referenced by several projects (refactor duplicated work). |
 | **Link** | A cross-project dependency edge (`blocks` / `relates` / `duplicates`). |
+| **Initiative** | A label surfaced as a trackable sub-roadmap inside a project — a read-time rollup of every item carrying that label (done/total, %), with click-to-focus via the label filter. Labels are the flag; no schema/API change. |
 | **Flow** | The board is a *flow* view: every item records lane `transitions[]`, so age, cycle time and throughput are measurable. |
 | **WIP limit** | A per-lane cap (`wipLimits`) that flags a lane when overloaded — the core flow-management lever. |
 | **Handoff (agent flow)** | A recorded handoff stamps items with `handoff:{agent}`; the Flow view tracks **brief → shipped**, agent throughput, and stalled briefs. |
@@ -133,7 +134,7 @@ Disk is the source of truth. External tools may read/write these exact shapes (a
 | `description` | string | |
 | `files` | string | comma-separated target files |
 | `acceptance` | string[] | acceptance criteria |
-| `labels` | string[]? | free-form tags for filtering/grouping cards |
+| `labels` | string[]? | free-form tags for filtering/grouping cards; each distinct label is also surfaced as an **Initiative** (a trackable sub-roadmap rollup) — see [`docs/initiatives.md`](docs/initiatives.md) |
 | `dueDate` | string? | `YYYY-MM-DD`; past + not `done` ⇒ overdue |
 | `scheduledFor` | string? | `YYYY-MM-DD` planned start |
 | `source` | string? | producing tool when accepted from a suggestion, e.g. `"ideaclyst"` (or `"trello"` / `"github"` on import) |
@@ -200,6 +201,7 @@ JSON
 - **Multi-project** — create / list / switch projects and a cross-project Portfolio. **Remove a project** from its header (next to the title): a deliberate, type-the-name confirmation guards it, and it's archived — not deleted — so the data stays on disk under `archive/` and can be restored.
 - **Per-project kanban** — four lanes, drag-between-lanes, 4-axis scoring + computed priority, categories.
 - **Labels & filters** — tag items/suggestions with free-form labels, filter a board by label, and carry labels into handoff briefs.
+- **Initiatives** — an item's `labels` are surfaced as first-class, trackable sub-roadmaps inside a project: an Initiatives strip shows each label with progress (done/total, %) and click-to-focus (it drives the existing label filter). Lets a "vNext"-style push live *inside* the real project instead of a separate one — no schema/API change, `labels` stay the storage. See [`docs/initiatives.md`](docs/initiatives.md).
 - **Due dates & scheduling** — give an item a `scheduledFor` start and a `dueDate`; the board flags **overdue** cards (and the Flow view counts them) until they reach Done.
 - **Comments & decision notes** — append-only notes on any item, typed as a plain *comment* or a *decision* record, kept on disk alongside the card.
 - **Activity timeline** — every item detail shows a derived history (created, lane moves, handoff, reports, comments) so the trail of work is always visible.
