@@ -180,6 +180,8 @@ The UI and external tools call the same store functions through these routes.
 | `GET` | `/api/projects/:id/reports` | ingest dropped report files + list recent reports (board polls this) |
 | `GET` | `/api/projects/:id/flow` | project flow metrics (WIP, cycle time, throughput, aging, agent flow) |
 | `GET` | `/api/flow` | portfolio flow metrics |
+| `GET` | `/api/projects/:id/insights` | decision intelligence: risk register, Monte Carlo completion forecast, decision log, outcome ledger |
+| `GET` | `/api/insights` | the same across the whole portfolio + cross-project initiative rollup |
 | `GET` / `POST` `DELETE` | `/api/links` , `/api/links/:id` | dependency graph |
 | `GET` / `POST` | `/api/shared` , `/api/shared/:id/attach` | shared items |
 | `GET` | `/api/portfolio` | cross-project ranking + graph |
@@ -200,6 +202,9 @@ JSON
 
 - **Multi-project** — create / list / switch projects and a cross-project Portfolio. **Remove a project** from its header (next to the title): a deliberate, type-the-name confirmation guards it, and it's archived — not deleted — so the data stays on disk under `archive/` and can be restored.
 - **Per-project kanban** — four lanes, drag-between-lanes, 4-axis scoring + computed priority, categories.
+- **Vertical templates & custom categories** — create a project from a vertical template (Software, Marketing & Content, Business Ops, Research & Trading, Compliance) that seeds categories, WIP limits and lane policies; or define any category list per project in ⚙ settings. Item categories are free-form strings, so an external tool's taxonomy (`"Campaigns"`, `"CAPA"`, …) round-trips intact. See [`docs/verticals.md`](docs/verticals.md).
+- **Insights (decision intelligence)** — a per-project **Insights** tab and a portfolio **/insights** view, all derived live from data the store already records: a severity-ranked **risk register** (overdue, due-soon, stale work, WIP breaches, stalled handoffs, dependency bottlenecks, idea pile-up, throughput stalls — each with a suggested action), a **Monte Carlo completion forecast** (P50/P85 from your real weekly throughput; refuses to invent a date on thin history), a **decision log**, and an **outcome ledger** of what shipped and what it produced. See [`docs/decision-intelligence.md`](docs/decision-intelligence.md).
+- **Saved views** — save the current search/category/label filter combination as a named chip on the board; one click applies it, one click clears it.
 - **Labels & filters** — tag items/suggestions with free-form labels, filter a board by label, and carry labels into handoff briefs.
 - **Initiatives** — an item's `labels` are surfaced as first-class, trackable sub-roadmaps inside a project: an Initiatives strip shows each label with progress (done/total, %) and click-to-focus (it drives the existing label filter). Lets a "vNext"-style push live *inside* the real project instead of a separate one — no schema/API change, `labels` stay the storage. See [`docs/initiatives.md`](docs/initiatives.md).
 - **Bulk push by label** — filter the board by a label (or click its initiative chip), hit **Select filtered** to select every matching not-yet-shipped card, fine-tune with each card's **Select** toggle, then **Push N → Development** to move the whole batch in one go. Pair it with **Develop all** to hand the lane straight to an agent.
@@ -222,13 +227,15 @@ JSON
 ## Project layout
 
 ```
-src/lib/         fsops, paths, ids, priority, flow, metrics, activity, schema/{types,version,normalize}
+src/lib/         fsops, paths, ids, priority, flow, metrics, activity, insights, templates,
+                 initiatives, schema/{types,version,normalize}
                  projects/ items/ board/ suggestions/ comments/ links/ shared/ stores
                  importer/{roadmap-html,trello,github}, handoff/{generate,records}, portfolio, markdown
-src/app/         portfolio (/), projects/[id] (board, flow, inbox, handoff, import),
-                 import, shared, projects/new, api/** route handlers (incl. flow, handoffs, comments)
+                 __tests__/  vitest unit suite (npm test)
+src/app/         portfolio (/), insights, projects/[id] (board, flow, insights, inbox, handoff, import),
+                 import, shared, projects/new, api/** route handlers (incl. flow, insights, comments)
 src/components/  sidebar, theme-toggle, roadmap-workspace, item-editor, inbox-list, flow-panel,
-                 portfolio-flow, project-settings, links-manager, import-form,
+                 insights-panel, portfolio-flow, project-settings, links-manager, import-form,
                  handoff-panel, project-nav
 docs/            documentation (README.html, threlmark-docs.html, HOSTING.html/md)
 site/            the public Threlmark.com website (static, incl. 4-language manual)

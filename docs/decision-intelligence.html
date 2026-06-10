@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Threlmark — Decision Intelligence &amp; Verticals</title>
+<meta name="description" content="The Insights layer (risk register, Monte Carlo forecast, decision log, outcome ledger) and vertical templates with per-project categories." />
+<style>
+  :root{
+    --ink:#f4f6f8; --surface:#fff; --soft:#eef2f7; --border:#d9dee7;
+    --text:#16181d; --strong:#0b0d12; --muted:#667085; --faint:#98a2b3;
+    --indigo:#4f46e5; --indigo-soft:#6366f1; --teal:#0f766e; --gold:#b45309; --rose:#be123c; --green:#15803d;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--ink);color:var(--text);line-height:1.6}
+  .wrap{max-width:1020px;margin:0 auto;padding:48px 26px 90px}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo);font-weight:700}
+  h1{font-size:clamp(30px,5vw,44px);color:var(--strong);letter-spacing:-.02em;line-height:1.12;margin:10px 0 14px}
+  .lede{font-size:17px;color:var(--muted);max-width:760px}
+  h2{font-size:24px;color:var(--strong);letter-spacing:-.01em;margin:64px 0 6px}
+  h3{font-size:16px;color:var(--strong);margin:22px 0 6px}
+  p{margin:10px 0}
+  .sub{color:var(--muted);font-size:14.5px;margin-bottom:20px}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 10px 26px rgba(15,23,42,.06)}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:840px){.g2,.g4{grid-template-columns:1fr}}
+  .pillar .num{font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:700}
+  .pillar h3{margin:6px 0 4px}
+  .pillar p{font-size:13.5px;color:var(--muted);margin:0}
+  code,.mono{font-family:var(--mono);font-size:.92em}
+  code{background:var(--soft);border:1px solid var(--border);border-radius:6px;padding:1px 6px}
+  pre{background:#0f172a;color:#dbe4ef;border-radius:12px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.55;margin:14px 0}
+  pre code{background:none;border:0;padding:0;color:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+  th{text-align:left;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:8px 10px;border-bottom:2px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid var(--soft);vertical-align:top}
+  .sev{font-family:var(--mono);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .sev.high{color:var(--rose);background:#fff1f2;border:1px solid #fecdd3}
+  .sev.med{color:var(--gold);background:#fffbeb;border:1px solid #fde68a}
+  .sev.low{color:var(--muted);background:var(--soft);border:1px solid var(--border)}
+  .arrow{color:var(--teal)}
+  .flowline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:12.5px;margin:16px 0}
+  .node{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 13px;color:var(--strong);font-weight:600}
+  .node.accent{border-color:var(--indigo);color:var(--indigo)}
+  .sep{color:var(--faint)}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding:10px 4px 0}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+  .bar{width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--indigo),var(--indigo-soft))}
+  .bar.ghost{background:#e3e7f0}
+  .blbl{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .bval{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .legend{display:flex;gap:18px;font-size:12.5px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .tmpl{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface)}
+  .tmpl b{color:var(--strong)}
+  .tmpl .cats{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:6px;line-height:1.7}
+  .callout{border-left:4px solid var(--indigo);background:var(--surface);border-radius:0 12px 12px 0;padding:14px 18px;margin:18px 0;font-size:14px}
+  .stat{text-align:center}
+  .stat b{display:block;font-size:26px;color:var(--indigo);font-family:var(--mono)}
+  .stat span{font-size:12px;color:var(--muted)}
+  .stat.gold b{color:var(--gold)}
+  a{color:var(--indigo)}
+  footer{margin-top:70px;font-size:12.5px;color:var(--faint);border-top:1px solid var(--border);padding-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">Threlmark · feature deep-dive · 2026-06</div>
+  <h1>Decision intelligence,<br/>for every vertical</h1>
+  <p class="lede">Threlmark already recorded everything — transitions, due dates, handoffs, decisions, outcomes. The <b>Insights</b> layer turns that record into answers, and <b>vertical templates + free-form categories</b> open the same engine to marketing teams, trading desks, ops and compliance — not just software.</p>
+
+  <div class="grid g4" style="margin-top:30px">
+    <div class="panel pillar"><span class="num">01</span><h3>Risk register</h3><p>8 derived signal kinds, severity-ranked, each with a suggested action.</p></div>
+    <div class="panel pillar"><span class="num">02</span><h3>Forecast</h3><p>Monte Carlo over your real weekly throughput. P50 &amp; P85, never invented.</p></div>
+    <div class="panel pillar"><span class="num">03</span><h3>Decision log</h3><p>Every “decision” note, project-wide, newest first. A built-in audit trail.</p></div>
+    <div class="panel pillar"><span class="num">04</span><h3>Outcome ledger</h3><p>What shipped and what it produced — the honest changelog.</p></div>
+  </div>
+
+  <h2>Derived, never bookkept</h2>
+  <p class="sub">No new on-disk state. Every signal is computed at read time from data the store already writes — Insights and the board can never disagree.</p>
+  <div class="flowline">
+    <span class="node">transitions</span><span class="node">dueDate</span><span class="node">handoff + reports</span><span class="node">links</span><span class="node">decision notes</span><span class="node">outcome</span>
+    <span class="sep">──▶</span>
+    <span class="node accent">assessRisks()</span>
+    <span class="node accent">forecastCompletion()</span>
+    <span class="sep">──▶</span>
+    <span class="node">Insights tab</span><span class="node">/insights</span><span class="node">/api/insights</span>
+  </div>
+
+  <h2>The risk register</h2>
+  <p class="sub">A triage list, not a dashboard ornament: what is wrong, how bad, and what to do next.</p>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Signal</th><th>Trigger</th><th>Severity</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">overdue</td><td>past its due date, not Done</td><td><span class="sev high">high</span></td></tr>
+        <tr><td class="mono">due-soon</td><td>due within 3 days</td><td><span class="sev high">high</span> if not started · <span class="sev med">medium</span> in progress</td></tr>
+        <tr><td class="mono">stale-development</td><td>over the lane age threshold (7d dev · 21d ranked · 60d ideas)</td><td><span class="sev high">high</span> in dev · <span class="sev low">low</span> elsewhere</td></tr>
+        <tr><td class="mono">wip-over-limit</td><td>lane exceeds its WIP limit</td><td><span class="sev high">high</span> for Development</td></tr>
+        <tr><td class="mono">stalled-handoff</td><td>handed to an agent &gt; 7 days ago, not Done</td><td><span class="sev high">high</span></td></tr>
+        <tr><td class="mono">bottleneck</td><td>open item that <i>blocks</i> others</td><td><span class="sev high">high</span> when blocking ≥ 2</td></tr>
+        <tr><td class="mono">idea-pileup</td><td>≥ 15 ideas &amp; &gt; 60 % of board unranked</td><td><span class="sev low">low</span></td></tr>
+        <tr><td class="mono">throughput-stall</td><td>dev work exists, nothing Done in 3+ weeks</td><td><span class="sev med">medium</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px;color:var(--muted)">Example, live from the Threlmark project itself while this feature was being built:</p>
+    <pre><code>HIGH   Development over WIP limit (8/3)
+       8 items against a limit of 3.
+       → Stop starting, start finishing: close or demote items before pulling new work.</code></pre>
+  </div>
+
+  <h2>The completion forecast</h2>
+  <p class="sub">“When will the Ranked + Development backlog drain?” — answered by simulation over <i>your</i> history, not a velocity guess.</p>
+  <div class="grid g2">
+    <div class="panel">
+      <h3 style="margin-top:0">Last 12 weeks of real throughput</h3>
+      <div class="bars" role="img" aria-label="example weekly throughput history">
+        <div class="bcol"><span class="bval"></span><div class="bar ghost" style="height:4%"></div><span class="blbl">-12w</span></div>
+        <div class="bcol"><span class="bval">1</span><div class="bar" style="height:15%"></div><span class="blbl">-11w</span></div>
+        <div class="bcol"><span class="bval"></span><div class="bar ghost" style="height:4%"></div><span class="blbl">-10w</span></div>
+        <div class="bcol"><span class="bval">2</span><div class="bar" style="height:30%"></div><span class="blbl">-9w</span></div>
+        <div class="bcol"><span class="bval">1</span><div class="bar" style="height:15%"></div><span class="blbl">-8w</span></div>
+        <div class="bcol"><span class="bval">3</span><div class="bar" style="height:44%"></div><span class="blbl">-7w</span></div>
+        <div class="bcol"><span class="bval"></span><div class="bar ghost" style="height:4%"></div><span class="blbl">-6w</span></div>
+        <div class="bcol"><span class="bval">2</span><div class="bar" style="height:30%"></div><span class="blbl">-5w</span></div>
+        <div class="bcol"><span class="bval">4</span><div class="bar" style="height:60%"></div><span class="blbl">-4w</span></div>
+        <div class="bcol"><span class="bval">1</span><div class="bar" style="height:15%"></div><span class="blbl">-3w</span></div>
+        <div class="bcol"><span class="bval">7</span><div class="bar" style="height:100%"></div><span class="blbl">-2w</span></div>
+        <div class="bcol"><span class="bval">2</span><div class="bar" style="height:30%"></div><span class="blbl">-1w</span></div>
+      </div>
+      <div class="legend"><span><span class="dot" style="background:var(--indigo)"></span>items reaching Done</span><span><span class="dot" style="background:#e3e7f0"></span>zero weeks — sampled too</span></div>
+    </div>
+    <div class="panel">
+      <h3 style="margin-top:0">1 000 simulated drains of a 9-item backlog</h3>
+      <div class="grid g2" style="margin-top:14px">
+        <div class="stat"><b>2026-09-09</b><span>likely · P50 · 13 weeks</span></div>
+        <div class="stat gold"><b>2026-11-25</b><span>conservative · P85 · 24 weeks</span></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:16px">Each run draws random weeks from the real history until the backlog hits zero. Zero-throughput weeks are part of the distribution — that is what makes the P85 honest.</p>
+      <div class="callout" style="margin-bottom:0">
+        <b>Two honesty rules.</b> Fewer than 2 non-zero weeks → no forecast, with the reason stated. And the PRNG is seeded (mulberry32), so the same board always produces the same dates.
+      </div>
+    </div>
+  </div>
+
+  <h2>Verticals: same engine, your vocabulary</h2>
+  <p class="sub">Five templates seed categories, WIP limits and lane policies at creation. Item categories are free-form strings — an external tool’s <code>"Campaigns"</code> or <code>"CAPA"</code> now round-trips intact instead of being coerced to <code>"Build"</code>.</p>
+  <div class="grid g2">
+    <div class="tmpl"><b>Software product</b> — the classic board<div class="cats">Research · Discovery · Reports · Trends · Validation · Build · Distribution · Operations · UX · Automation</div></div>
+    <div class="tmpl"><b>Marketing &amp; content</b> — Done = published<div class="cats">Content · Campaigns · SEO · Social · Email · Video · Brand · Partnerships · Analytics</div></div>
+    <div class="tmpl"><b>Business operations</b> — one owner per item<div class="cats">Strategy · Finance · Hiring · Process · Legal · Vendors · Sales · Support · Tooling</div></div>
+    <div class="tmpl"><b>Research &amp; trading</b> — validated <i>or killed</i> both count<div class="cats">Hypothesis · Data · Backtest · Risk · Execution · Calibration · Infra · Reporting</div></div>
+    <div class="tmpl"><b>Compliance &amp; regulated</b> — outcome = audit evidence<div class="cats">Policy · Audit · Validation · Documentation · Training · CAPA · Risk · Submission</div></div>
+    <div class="tmpl" style="border-style:dashed"><b>Yours</b> — board ⚙ → Categories<div class="cats">any comma-separated list, ≤ 24 entries — items never get recoded</div></div>
+  </div>
+
+  <h2>Saved views</h2>
+  <p class="sub">Every vertical slices its board differently. <b>☆ Save view</b> captures the current search + category + label filters as a named chip on the toolbar — click to apply, click again to clear, ✕ to delete. Stored in <code>project.json</code>, so views travel with the data.</p>
+
+  <h2>Agent-readable, like everything else</h2>
+  <div class="panel">
+<pre style="margin:0"><code>$ curl -s localhost:4789/api/insights | jq '{projects:.projectCount, risks:(.risks|length),
+    p50:.forecast.forecast.p50Date, initiatives:(.initiatives|length)}'
+{
+  "projects": 34,
+  "risks": 7,
+  "p50": "2026-08-05",
+  "initiatives": 184
+}</code></pre>
+    <p style="font-size:13px;color:var(--muted);margin-top:12px;margin-bottom:0">
+      <code>GET /api/insights</code> · <code>GET /api/projects/:id/insights</code> — anything a user can see on the Insights pages, an agent can read and act on. The handoff loop can now <i>prioritize by risk</i>, not just by score.
+    </p>
+  </div>
+
+  <h2>Where it lives</h2>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Piece</th><th>Path</th></tr></thead>
+      <tbody>
+        <tr><td>Derivation core (pure, tested)</td><td class="mono">src/lib/insights.ts · src/lib/templates.ts</td></tr>
+        <tr><td>Unit suite (npm test · 27 tests)</td><td class="mono">src/lib/__tests__/insights.test.ts · domain.test.ts</td></tr>
+        <tr><td>API</td><td class="mono">/api/insights · /api/projects/[id]/insights · /api/projects (template)</td></tr>
+        <tr><td>UI</td><td class="mono">/insights · /projects/[id]/insights · board ☆ views · ⚙ categories · new-project picker</td></tr>
+        <tr><td>Docs</td><td class="mono">docs/decision-intelligence.md · docs/verticals.md · README.md</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>Threlmark · decision intelligence &amp; verticals · built and tracked in Threlmark itself (initiative <span class="mono">decision-intelligence</span>) · © 2026 Thorsten Meyer</footer>
+</div>
+</body>
+</html>
