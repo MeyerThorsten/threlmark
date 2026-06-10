@@ -6,7 +6,6 @@
 
 import {
   AGENTS,
-  CATEGORIES,
   LANES,
   REPORT_STATUSES,
   SCHEMA_VERSION,
@@ -26,8 +25,17 @@ function clampScore(n: unknown, fallback: number): number {
   return Math.min(5, Math.max(1, v));
 }
 
+/**
+ * Categories are free-form so any vertical's taxonomy round-trips intact —
+ * an external tool writing `category: "Campaigns"` must never be coerced on
+ * the next read-merge-write. Only empty/non-string values fall back.
+ */
 export function toCategory(value: unknown): Category {
-  return CATEGORIES.includes(value as Category) ? (value as Category) : "Build";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed) return trimmed.slice(0, 40);
+  }
+  return "Build";
 }
 
 export function toStatus(value: unknown): Status {

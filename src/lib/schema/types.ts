@@ -32,6 +32,11 @@ export const LANE_LABELS: Record<Lane, string> = {
   done: "Done",
 };
 
+/**
+ * Default categories (software-product flavored). A project may define its own
+ * vertical-specific list via `Project.categories`; an item's `category` is any
+ * free-form string so external tools' categories survive read-merge-write.
+ */
 export const CATEGORIES = [
   "Research",
   "Discovery",
@@ -44,10 +49,19 @@ export const CATEGORIES = [
   "UX",
   "Automation",
 ] as const;
-export type Category = (typeof CATEGORIES)[number];
+export type Category = string;
 
 export const LINK_KINDS = ["blocks", "relates", "duplicates"] as const;
 export type LinkKind = (typeof LINK_KINDS)[number];
+
+/** A named filter combination saved on a project (board toolbar). */
+export interface SavedView {
+  id: string;
+  name: string;
+  search?: string;
+  category?: string;
+  label?: string;
+}
 
 /** Root manifest at <root>/threlmark.json */
 export interface Manifest {
@@ -72,6 +86,10 @@ export interface Project {
   wipLimits?: Partial<Record<Lane, number>>;
   /** Short explicit policy per lane (Definition of Workflow). */
   lanePolicies?: Partial<Record<Lane, string>>;
+  /** Vertical-specific category list. Absent ⇒ the default `CATEGORIES`. */
+  categories?: string[];
+  /** Named filter combinations for the board toolbar. */
+  savedViews?: SavedView[];
   createdAt: string;
   updatedAt: string;
 }

@@ -2,7 +2,7 @@ import { readdir } from "node:fs/promises";
 
 import { ensureDir, pathExists, readJson, writeJson } from "../fsops";
 import { makeId } from "../ids";
-import { itemCommentPath, itemCommentsDir } from "../paths";
+import { commentsDir, itemCommentPath, itemCommentsDir } from "../paths";
 import {
   COMMENT_KINDS,
   SCHEMA_VERSION,
@@ -54,6 +54,19 @@ export async function listComments(projectId: string, itemId: string): Promise<I
     if (comment) comments.push(comment);
   }
   return comments.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Every comment in the project, across all items (for the decision log). */
+export async function listAllComments(projectId: string): Promise<ItemComment[]> {
+  const root = commentsDir(projectId);
+  if (!(await pathExists(root))) return [];
+  const entries = await readdir(root, { withFileTypes: true });
+  const all: ItemComment[] = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    all.push(...(await listComments(projectId, entry.name)));
+  }
+  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function createComment(

@@ -17,7 +17,13 @@ import {
   projectsRoot,
 } from "../paths";
 import { migrate } from "../schema/version";
-import { LANES, SCHEMA_VERSION, type Lane, type Project } from "../schema/types";
+import {
+  LANES,
+  SCHEMA_VERSION,
+  type Lane,
+  type Project,
+  type SavedView,
+} from "../schema/types";
 
 function normalizeWipLimits(value: unknown): Partial<Record<Lane, number>> | undefined {
   if (!value || typeof value !== "object") return undefined;
@@ -39,11 +45,49 @@ function normalizeLanePolicies(value: unknown): Partial<Record<Lane, string>> | 
   return Object.keys(out).length ? out : undefined;
 }
 
+/** Per-project vertical categories: trimmed, unique, capped (≤24 × ≤40 chars). */
+export function normalizeCategories(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const out = [
+    ...new Set(
+      value
+        .filter((v): v is string => typeof v === "string")
+        .map((v) => v.trim().slice(0, 40))
+        .filter(Boolean),
+    ),
+  ].slice(0, 24);
+  return out.length ? out : undefined;
+}
+
+export function normalizeSavedViews(value: unknown): SavedView[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const out: SavedView[] = [];
+  for (const raw of value.slice(0, 24)) {
+    if (!raw || typeof raw !== "object") continue;
+    const v = raw as Record<string, unknown>;
+    const name = typeof v.name === "string" ? v.name.trim().slice(0, 60) : "";
+    if (!name) continue;
+    const str = (x: unknown) =>
+      typeof x === "string" && x.trim() ? x.trim() : undefined;
+    out.push({
+      id: typeof v.id === "string" && v.id.trim() ? v.id : `view-${out.length}`,
+      name,
+      search: str(v.search),
+      category: str(v.category),
+      label: str(v.label),
+    });
+  }
+  return out.length ? out : undefined;
+}
+
 export interface CreateProjectInput {
   name: string;
   description?: string;
   repoPath?: string;
   color?: string;
+  categories?: string[];
+  wipLimits?: Partial<Record<Lane, number>>;
+  lanePolicies?: Partial<Record<Lane, string>>;
 }
 
 function normalizeProject(raw: Record<string, unknown>): Project {
@@ -60,6 +104,8 @@ function normalizeProject(raw: Record<string, unknown>): Project {
     status: migrated.status === "archived" ? "archived" : "active",
     wipLimits: normalizeWipLimits(migrated.wipLimits),
     lanePolicies: normalizeLanePolicies(migrated.lanePolicies),
+    categories: normalizeCategories(migrated.categories),
+    savedViews: normalizeSavedViews(migrated.savedViews),
     createdAt: typeof migrated.createdAt === "string" ? migrated.createdAt : new Date().toISOString(),
     updatedAt: typeof migrated.updatedAt === "string" ? migrated.updatedAt : new Date().toISOString(),
   } as Project;
@@ -89,6 +135,9 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
     repoPath: input.repoPath?.trim() || undefined,
     color: input.color?.trim() || undefined,
     status: "active",
+    wipLimits: normalizeWipLimits(input.wipLimits),
+    lanePolicies: normalizeLanePolicies(input.lanePolicies),
+    categories: normalizeCategories(input.categories),
     createdAt: now,
     updatedAt: now,
   };
@@ -138,6 +187,12 @@ export async function updateProject(
   const next: Project = {
     ...current,
     ...patch,
+    ...("wipLimits" in patch ? { wipLimits: normalizeWipLimits(patch.wipLimits) } : {}),
+    ...("lanePolicies" in patch
+      ? { lanePolicies: normalizeLanePolicies(patch.lanePolicies) }
+      : {}),
+    ...("categories" in patch ? { categories: normalizeCategories(patch.categories) } : {}),
+    ...("savedViews" in patch ? { savedViews: normalizeSavedViews(patch.savedViews) } : {}),
     id: current.id,
     slug: current.slug,
     createdAt: current.createdAt,
