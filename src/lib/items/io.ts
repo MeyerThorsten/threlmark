@@ -37,11 +37,13 @@ export async function listItems(projectId: string): Promise<RoadmapItem[]> {
   if (!(await pathExists(dir))) return [];
   const files = await readdir(dir);
   const now = new Date().toISOString();
-  const items: RoadmapItem[] = [];
-  for (const file of files) {
-    if (!file.endsWith(".json")) continue;
-    const raw = await readJson<Record<string, unknown>>(`${dir}/${file}`);
-    if (raw) items.push(normalizeItem(migrate(raw), projectId, now));
-  }
-  return items;
+  // One file per item — read them concurrently; order follows readdir.
+  const raws = await Promise.all(
+    files
+      .filter((file) => file.endsWith(".json"))
+      .map((file) => readJson<Record<string, unknown>>(`${dir}/${file}`)),
+  );
+  return raws
+    .filter((raw): raw is Record<string, unknown> => !!raw)
+    .map((raw) => normalizeItem(migrate(raw), projectId, now));
 }

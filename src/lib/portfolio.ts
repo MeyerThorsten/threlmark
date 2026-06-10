@@ -23,8 +23,7 @@ const STATUS_WEIGHT: Record<Status, number> = {
 };
 
 export async function buildPortfolio(): Promise<Portfolio> {
-  const projects = await listProjects();
-  const links = await listLinks();
+  const [projects, links] = await Promise.all([listProjects(), listLinks()]);
 
   // How many items each address blocks (kind === "blocks", counted at the source).
   const blockCount = new Map<string, number>();
@@ -34,9 +33,12 @@ export async function buildPortfolio(): Promise<Portfolio> {
     }
   }
 
+  const perProject = await Promise.all(
+    projects.map(async (project) => ({ project, items: await listItemViews(project.id) })),
+  );
+
   const entries: PortfolioEntry[] = [];
-  for (const project of projects) {
-    const items = await listItemViews(project.id);
+  for (const { project, items } of perProject) {
     for (const item of items) {
       const address = makeAddress(project.id, item.id);
       const blocks = blockCount.get(address) ?? 0;

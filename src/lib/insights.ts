@@ -442,27 +442,39 @@ export interface PortfolioInsights {
 
 export async function portfolioInsights(): Promise<PortfolioInsights> {
   const [projects, links] = await Promise.all([listProjects(), listLinks()]);
+
+  // Fan out per project; merge in the projects' (name-sorted) order so the
+  // result is deterministic regardless of which reads finish first.
+  const perProject = await Promise.all(
+    projects.map(async (p) => {
+      const items = await listItemViews(p.id);
+      return {
+        project: p,
+        items,
+        outcomes: outcomesOf(items, p.name),
+        risks: assessRisks(items, {
+          wipLimits: p.wipLimits,
+          links,
+          projectId: p.id,
+          projectName: p.name,
+        }),
+      };
+    }),
+  );
+
   const risks: RiskSignal[] = [];
   const allItems: RoadmapItemView[] = [];
   const outcomes: OutcomeEntry[] = [];
   const projectsByLabel = new Map<string, Set<string>>();
 
-  for (const p of projects) {
-    const items = await listItemViews(p.id);
+  for (const { project, items, outcomes: o, risks: r } of perProject) {
     allItems.push(...items);
-    outcomes.push(...outcomesOf(items, p.name));
-    risks.push(
-      ...assessRisks(items, {
-        wipLimits: p.wipLimits,
-        links,
-        projectId: p.id,
-        projectName: p.name,
-      }),
-    );
+    outcomes.push(...o);
+    risks.push(...r);
     for (const it of items) {
       for (const label of it.labels ?? []) {
         if (!projectsByLabel.has(label)) projectsByLabel.set(label, new Set());
-        projectsByLabel.get(label)!.add(p.name);
+        projectsByLabel.get(label)!.add(project.name);
       }
     }
   }

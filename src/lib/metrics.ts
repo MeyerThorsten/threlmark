@@ -147,8 +147,8 @@ export async function projectFlow(projectId: string): Promise<ProjectFlow | null
 export async function portfolioFlow(): Promise<PortfolioFlow> {
   const projects = await listProjects();
   const nameById = new Map(projects.map((p) => [p.id, p.name]));
-  const all: RoadmapItem[] = [];
-  for (const p of projects) all.push(...(await listItems(p.id)));
+  const perProject = await Promise.all(projects.map((p) => listItems(p.id)));
+  const all: RoadmapItem[] = perProject.flat();
   const metrics = computeFlow(all, { projectNameById: nameById });
   return { ...metrics, generatedAt: new Date().toISOString(), projectCount: projects.length };
 }

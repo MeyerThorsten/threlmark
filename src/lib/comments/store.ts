@@ -45,14 +45,18 @@ export async function listComments(projectId: string, itemId: string): Promise<I
   const dir = itemCommentsDir(projectId, itemId);
   if (!(await pathExists(dir))) return [];
   const files = await readdir(dir);
-  const comments: ItemComment[] = [];
-  for (const file of files) {
-    if (!file.endsWith(".json")) continue;
-    const raw = await readJson<Record<string, unknown>>(`${dir}/${file}`);
-    if (!raw) continue;
-    const comment = normalizeComment(raw, projectId, itemId, file.replace(/\.json$/, ""));
-    if (comment) comments.push(comment);
-  }
+  const comments = (
+    await Promise.all(
+      files
+        .filter((file) => file.endsWith(".json"))
+        .map(async (file) => {
+          const raw = await readJson<Record<string, unknown>>(`${dir}/${file}`);
+          return raw
+            ? normalizeComment(raw, projectId, itemId, file.replace(/\.json$/, ""))
+            : null;
+        }),
+    )
+  ).filter((c): c is ItemComment => !!c);
   return comments.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
@@ -61,12 +65,12 @@ export async function listAllComments(projectId: string): Promise<ItemComment[]>
   const root = commentsDir(projectId);
   if (!(await pathExists(root))) return [];
   const entries = await readdir(root, { withFileTypes: true });
-  const all: ItemComment[] = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    all.push(...(await listComments(projectId, entry.name)));
-  }
-  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const perItem = await Promise.all(
+    entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => listComments(projectId, entry.name)),
+  );
+  return perItem.flat().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function createComment(

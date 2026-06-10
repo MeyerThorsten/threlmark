@@ -158,13 +158,14 @@ export async function getProject(id: string): Promise<Project | null> {
 async function listFrom(root: string): Promise<Project[]> {
   if (!(await pathExists(root))) return [];
   const entries = await readdir(root, { withFileTypes: true });
-  const projects: Project[] = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const raw = await readJson<Record<string, unknown>>(`${root}/${entry.name}/project.json`);
-    if (raw) projects.push(normalizeProject(raw));
-  }
-  return projects;
+  const raws = await Promise.all(
+    entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => readJson<Record<string, unknown>>(`${root}/${entry.name}/project.json`)),
+  );
+  return raws
+    .filter((raw): raw is Record<string, unknown> => !!raw)
+    .map(normalizeProject);
 }
 
 export async function listProjects(
