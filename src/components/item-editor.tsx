@@ -103,6 +103,7 @@ export function ItemEditor({
   onDelete,
   crossProject,
   item,
+  categories,
 }: {
   initial: ItemDraft;
   heading: string;
@@ -111,6 +112,8 @@ export function ItemEditor({
   onDelete?: () => Promise<void>;
   crossProject?: CrossProjectControls;
   item?: RoadmapItemView;
+  /** Project category list (vertical-specific); defaults to `CATEGORIES`. */
+  categories?: string[];
 }) {
   const [draft, setDraft] = useState<ItemDraft>(initial);
   const [busy, setBusy] = useState(false);
@@ -212,9 +215,11 @@ export function ItemEditor({
                 value={draft.category}
                 onChange={(e) => set("category", e.target.value)}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
+                {[...new Set([...(categories?.length ? categories : CATEGORIES), draft.category])]
+                  .filter(Boolean)
+                  .map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
               </select>
             </div>
             <div>

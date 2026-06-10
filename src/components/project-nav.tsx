@@ -9,6 +9,7 @@ export function ProjectNav({ id, inbox }: { id: string; inbox: number }) {
   const tabs = [
     { href: base, label: "Board" },
     { href: `${base}/flow`, label: "Flow" },
+    { href: `${base}/insights`, label: "Insights" },
     { href: `${base}/inbox`, label: inbox > 0 ? `Inbox · ${inbox}` : "Inbox" },
     { href: `${base}/handoff`, label: "Handoff" },
   ];

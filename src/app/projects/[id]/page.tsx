@@ -74,6 +74,8 @@ export default async function ProjectBoardPage({
         otherProjects={otherProjects}
         wipLimits={project.wipLimits ?? {}}
         lanePolicies={project.lanePolicies ?? {}}
+        projectCategories={project.categories}
+        initialSavedViews={project.savedViews ?? []}
       />
     </>
   );

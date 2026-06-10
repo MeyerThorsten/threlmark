@@ -670,3 +670,62 @@ a { color: inherit; text-decoration: none; }
   .main { padding: 22px 18px 50px; }
   .lanes { grid-template-columns: 1fr; }
 }
+
+/* ----- Insights: risk register & severity badges ----- */
+.risk-row { display: flex; gap: 10px; align-items: flex-start; }
+.sev {
+  flex: none;
+  margin-top: 1px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.sev-high { color: var(--rose); background: #fff1f2; border-color: #fecdd3; }
+.sev-medium { color: var(--gold); background: #fffbeb; border-color: #fde68a; }
+.sev-low { color: var(--muted); background: var(--soft); border-color: var(--border); }
+:root[data-theme="dark"] .sev-high { background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.4); }
+:root[data-theme="dark"] .sev-medium { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.42); }
+:root[data-theme="dark"] .sev-low { background: rgba(148, 163, 184, 0.1); border-color: rgba(148, 163, 184, 0.3); }
+
+/* ----- Saved views ----- */
+.saved-views { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 10px; align-items: center; }
+.view-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.view-chip:hover { border-color: var(--border-bright); }
+.view-chip.active { border-color: var(--ember); color: var(--ember); background: var(--surface); }
+.view-chip .x { color: var(--faint); font-size: 11px; }
+.view-chip .x:hover { color: var(--rose); }
+
+/* ----- New-project template picker ----- */
+.tmpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tmpl-card {
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.tmpl-card:hover { border-color: var(--border-bright); }
+.tmpl-card.active { border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember); }
+.tmpl-name { font-weight: 700; font-size: 13.5px; color: var(--text-strong); }
+.tmpl-tagline { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.tmpl-cats { font-size: 11px; color: var(--faint); font-family: var(--font-mono); }

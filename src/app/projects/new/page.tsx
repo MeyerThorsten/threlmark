@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
+import { PROJECT_TEMPLATES } from "@/lib/templates";
 import type { Project } from "@/lib/schema/types";
 
 const SWATCHES = ["#e8893d", "#4fb6a8", "#d9b44a", "#6f8bba", "#d96b7c", "#5aa987"];
@@ -13,6 +14,7 @@ export default function NewProjectPage() {
   const [description, setDescription] = useState("");
   const [repoPath, setRepoPath] = useState("");
   const [color, setColor] = useState(SWATCHES[0]);
+  const [template, setTemplate] = useState("software");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -24,7 +26,7 @@ export default function NewProjectPage() {
     try {
       const project = await api<Project>("/api/projects", {
         method: "POST",
-        json: { name, description, repoPath, color },
+        json: { name, description, repoPath, color, template },
       });
       router.push(`/projects/${project.id}`);
       router.refresh();
@@ -80,6 +82,27 @@ export default function NewProjectPage() {
             placeholder="/Users/you/Dev/ideaclyst"
             onChange={(e) => setRepoPath(e.target.value)}
           />
+        </div>
+        <div>
+          <span className="field-label">Vertical template — categories, WIP limits &amp; lane policies</span>
+          <div className="tmpl-grid">
+            {PROJECT_TEMPLATES.map((t) => (
+              <button
+                type="button"
+                key={t.id}
+                className={`tmpl-card ${template === t.id ? "active" : ""}`}
+                aria-pressed={template === t.id}
+                onClick={() => setTemplate(t.id)}
+              >
+                <span className="tmpl-name">{t.name}</span>
+                <span className="tmpl-tagline">{t.tagline}</span>
+                <span className="tmpl-cats">{t.categories.slice(0, 5).join(" · ")}{t.categories.length > 5 ? " · …" : ""}</span>
+              </button>
+            ))}
+          </div>
+          <p className="muted" style={{ fontSize: 12, margin: "6px 0 0" }}>
+            Just a starting point — everything can be changed later in the board&apos;s ⚙ settings.
+          </p>
         </div>
         <div>
           <span className="field-label">Accent</span>

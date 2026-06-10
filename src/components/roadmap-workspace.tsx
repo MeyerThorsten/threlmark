@@ -16,6 +16,7 @@ import {
   type Lane,
   type Project,
   type RoadmapItemView,
+  type SavedView,
 } from "@/lib/schema/types";
 import {
   ItemEditor,
@@ -54,9 +55,9 @@ type AddDraft = {
   fit: number;
   effort: number;
 };
-const emptyAdd = (): AddDraft => ({
+const emptyAdd = (category = "Build"): AddDraft => ({
   title: "",
-  category: "Build",
+  category,
   description: "",
   files: "",
   labels: "",
@@ -84,6 +85,8 @@ export function RoadmapWorkspace({
   otherProjects = [],
   wipLimits = {},
   lanePolicies = {},
+  projectCategories,
+  initialSavedViews = [],
 }: {
   projectId: string;
   projectName: string;
@@ -93,6 +96,8 @@ export function RoadmapWorkspace({
   otherProjects?: { id: string; name: string }[];
   wipLimits?: Partial<Record<Lane, number>>;
   lanePolicies?: Partial<Record<Lane, string>>;
+  projectCategories?: string[];
+  initialSavedViews?: SavedView[];
 }) {
   const router = useRouter();
   const [items, setItems] = useState<Record<string, RoadmapItemView>>(() =>
@@ -106,7 +111,12 @@ export function RoadmapWorkspace({
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<Lane | null>(null);
   const [editing, setEditing] = useState<RoadmapItemView | null>(null);
-  const [add, setAdd] = useState<AddDraft>(emptyAdd);
+  const baseCategories = useMemo(
+    () => (projectCategories?.length ? projectCategories : [...CATEGORIES]),
+    [projectCategories],
+  );
+  const [add, setAdd] = useState<AddDraft>(() => emptyAdd(baseCategories[0]));
+  const [views, setViews] = useState<SavedView[]>(initialSavedViews);
   const [briefTab, setBriefTab] = useState<HandoffFormat>("text");
   const [toast, setToast] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -165,6 +175,17 @@ export function RoadmapWorkspace({
   }, [projectId]);
 
   const all = useMemo(() => Object.values(items), [items]);
+  // Project categories first, then anything present on items (foreign data
+  // written by other tools must always be filterable/editable, never lost).
+  const categoryOptions = useMemo(
+    () => [
+      ...baseCategories,
+      ...[...new Set(all.map((it) => it.category))]
+        .filter((c) => !baseCategories.includes(c))
+        .sort((a, b) => a.localeCompare(b)),
+    ],
+    [all, baseCategories],
+  );
   const labelOptions = useMemo(
     () => [...new Set(all.flatMap((item) => item.labels ?? []))].sort((a, b) => a.localeCompare(b)),
     [all],
@@ -301,7 +322,7 @@ export function RoadmapWorkspace({
     });
     setItems((m) => ({ ...m, [created.id]: created }));
     setLanes((l) => ({ ...l, idea: [...l.idea, created.id] }));
-    setAdd(emptyAdd());
+    setAdd(emptyAdd(baseCategories[0]));
     flash("Added to Ideas");
     router.refresh();
   }
@@ -322,6 +343,55 @@ export function RoadmapWorkspace({
     setSelected((s) => new Set([...s, ...candidates.map((c) => c.id)]));
     candidates.forEach((c) => moveToLane(c.id, "development"));
     flash(`${candidates.length} pushed to Development`);
+  }
+
+  // ----- saved views -----
+  async function persistViews(next: SavedView[]) {
+    setViews(next);
+    try {
+      await api(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        json: { savedViews: next },
+      });
+    } catch {
+      flash("Could not save views");
+    }
+  }
+
+  function saveCurrentView() {
+    const hasFilter = search.trim() || categoryFilter !== "all" || labelFilter !== "all";
+    if (!hasFilter) return flash("Set a search, category or label first");
+    const name = window.prompt("Name this view:", labelFilter !== "all" ? labelFilter : search.trim());
+    if (!name?.trim()) return;
+    const view: SavedView = {
+      id: `view-${Date.now().toString(36)}`,
+      name: name.trim().slice(0, 60),
+      search: search.trim() || undefined,
+      category: categoryFilter !== "all" ? categoryFilter : undefined,
+      label: labelFilter !== "all" ? labelFilter : undefined,
+    };
+    persistViews([...views.filter((v) => v.name !== view.name), view]);
+    flash(`View “${view.name}” saved`);
+  }
+
+  function viewIsActive(v: SavedView): boolean {
+    return (
+      (v.search ?? "") === search.trim() &&
+      (v.category ?? "all") === categoryFilter &&
+      (v.label ?? "all") === labelFilter
+    );
+  }
+
+  function applyView(v: SavedView) {
+    if (viewIsActive(v)) {
+      setSearch("");
+      setCategoryFilter("all");
+      setLabelFilter("all");
+    } else {
+      setSearch(v.search ?? "");
+      setCategoryFilter(v.category ?? "all");
+      setLabelFilter(v.label ?? "all");
+    }
   }
 
   /** True when an item passes the current search + category + label filters. */
@@ -432,12 +502,13 @@ export function RoadmapWorkspace({
         />
         <select className="select" style={{ width: 180 }} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Category filter">
           <option value="all">All categories</option>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <select className="select" style={{ width: 170 }} value={labelFilter} onChange={(e) => setLabelFilter(e.target.value)} aria-label="Label filter">
           <option value="all">All labels</option>
           {labelOptions.map((label) => <option key={label} value={label}>{label}</option>)}
         </select>
+        <button className="btn" onClick={saveCurrentView} title="Save the current filters as a named view">☆ Save view</button>
         <button className="btn" onClick={rankAll}>Rank by score</button>
         <button className="btn btn-teal" onClick={() => pushTop(3)}>Push top 3</button>
         <button className="btn" onClick={selectFiltered} title="Select all items matching the current filters">Select filtered</button>
@@ -452,6 +523,42 @@ export function RoadmapWorkspace({
         <button className="btn btn-primary" onClick={copyBrief}>Copy dev brief</button>
         <button className="btn" onClick={() => setShowSettings(true)} aria-label="Workflow settings" title="WIP limits & lane policies">⚙</button>
       </section>
+
+      {views.length > 0 && (
+        <section className="saved-views" aria-label="Saved views">
+          <span className="muted" style={{ fontSize: 12 }}>Views:</span>
+          {views.map((v) => {
+            const active = viewIsActive(v);
+            return (
+              <button
+                key={v.id}
+                type="button"
+                className={`view-chip ${active ? "active" : ""}`}
+                aria-pressed={active}
+                title={[
+                  v.search && `search “${v.search}”`,
+                  v.category && `category ${v.category}`,
+                  v.label && `label ${v.label}`,
+                ].filter(Boolean).join(" · ")}
+                onClick={() => applyView(v)}
+              >
+                {v.name}
+                <span
+                  className="x"
+                  role="button"
+                  aria-label={`Delete view ${v.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    persistViews(views.filter((x) => x.id !== v.id));
+                  }}
+                >
+                  ✕
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      )}
 
       {initiatives.length > 0 && (
         <section className="initiatives" aria-label="Initiatives">
@@ -606,7 +713,7 @@ export function RoadmapWorkspace({
             <form className="form-grid" style={{ display: "grid", gap: 9 }} onSubmit={addItem}>
               <input className="input" maxLength={96} required placeholder="Item title" value={add.title} onChange={(e) => setAdd({ ...add, title: e.target.value })} />
               <select className="select" value={add.category} onChange={(e) => setAdd({ ...add, category: e.target.value })}>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
               <textarea className="textarea" maxLength={420} placeholder="Problem, user value, and expected result" value={add.description} onChange={(e) => setAdd({ ...add, description: e.target.value })} />
               <input className="input" maxLength={180} placeholder="Likely files or modules" value={add.files} onChange={(e) => setAdd({ ...add, files: e.target.value })} />
@@ -648,6 +755,7 @@ export function RoadmapWorkspace({
           heading="Edit item"
           initial={draftFromItem(editing)}
           item={editing}
+          categories={categoryOptions}
           onSave={(d) => saveEdit(editing.id, d)}
           onCancel={() => setEditing(null)}
           onDelete={() => removeItem(editing.id)}
@@ -664,6 +772,7 @@ export function RoadmapWorkspace({
           projectId={projectId}
           initialLimits={wipLimits}
           initialPolicies={lanePolicies}
+          initialCategories={projectCategories ?? []}
           onClose={() => setShowSettings(false)}
         />
       )}

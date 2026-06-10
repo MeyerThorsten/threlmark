@@ -12,16 +12,19 @@ export function ProjectSettings({
   projectId,
   initialLimits,
   initialPolicies,
+  initialCategories = [],
   onClose,
 }: {
   projectId: string;
   initialLimits: Limits;
   initialPolicies: Policies;
+  initialCategories?: string[];
   onClose: () => void;
 }) {
   const router = useRouter();
   const [limits, setLimits] = useState<Limits>(initialLimits);
   const [policies, setPolicies] = useState<Policies>(initialPolicies);
+  const [categoriesText, setCategoriesText] = useState(initialCategories.join(", "));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -36,9 +39,12 @@ export function ProjectSettings({
         if (typeof limits[l] === "number" && limits[l]! > 0) wipLimits[l] = limits[l];
         if (policies[l]?.trim()) lanePolicies[l] = policies[l]!.trim();
       }
+      const categories = [
+        ...new Set(categoriesText.split(",").map((c) => c.trim()).filter(Boolean)),
+      ];
       await api(`/api/projects/${projectId}`, {
         method: "PATCH",
-        json: { wipLimits, lanePolicies },
+        json: { wipLimits, lanePolicies, categories },
       });
       onClose();
       router.refresh();
@@ -86,6 +92,21 @@ export function ProjectSettings({
               </div>
             </div>
           ))}
+          <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+            <label className="field-label" htmlFor="ps-cats">
+              Categories (comma-separated — tailor the board to your vertical)
+            </label>
+            <textarea
+              id="ps-cats"
+              className="textarea"
+              placeholder="Leave empty for the defaults (Research, Discovery, Build, …)"
+              value={categoriesText}
+              onChange={(e) => setCategoriesText(e.target.value)}
+            />
+            <p className="muted" style={{ fontSize: 12, margin: "6px 0 0" }}>
+              Items keep their category even if it&apos;s not on this list — nothing is recoded.
+            </p>
+          </div>
           {err && <p style={{ color: "var(--rose)", fontSize: 13 }}>{err}</p>}
         </div>
         <div className="modal-foot">

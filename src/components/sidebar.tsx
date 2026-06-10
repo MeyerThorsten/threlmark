@@ -35,6 +35,12 @@ export function Sidebar({ projects }: { projects: NavProject[] }) {
         <span>◇ Portfolio</span>
       </Link>
       <Link
+        href="/insights"
+        className={`nav-link ${pathname === "/insights" ? "active" : ""}`}
+      >
+        <span>◈ Insights</span>
+      </Link>
+      <Link
         href="/import"
         className={`nav-link ${pathname === "/import" ? "active" : ""}`}
       >
