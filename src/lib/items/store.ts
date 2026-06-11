@@ -6,6 +6,7 @@
  */
 
 import { getBoard, placeInLane, removeFromBoard, writeBoard } from "../board/store";
+import { emitEvent, eventItem } from "../events";
 import { makeId } from "../ids";
 import { withPriority } from "../priority";
 import { normalizeItem } from "../schema/normalize";
@@ -63,6 +64,13 @@ export async function createItem(
 
   const board = await getBoard(projectId);
   await writeBoard(projectId, placeInLane(board, id, item.status));
+  await emitEvent({
+    type: "item.created",
+    at: now,
+    projectId,
+    itemId: id,
+    item: eventItem(item),
+  });
   return withPriority(item);
 }
 
@@ -102,11 +110,22 @@ export async function updateItem(
     now,
   );
   // Record a lane transition when the status actually changed.
-  if (merged.status !== current.status) {
+  const laneChanged = merged.status !== current.status;
+  if (laneChanged) {
     merged.transitions = [...merged.transitions, { to: merged.status, at: now }];
   }
   await writeItem(merged);
   // If status changed, board self-reconciles on next read; nothing else to do.
+  if (laneChanged) {
+    await emitEvent({
+      type: merged.status === "done" ? "item.done" : "item.moved",
+      at: now,
+      projectId,
+      itemId,
+      item: eventItem(merged),
+      data: { fromLane: current.status, toLane: merged.status },
+    });
+  }
   return withPriority(merged);
 }
 
@@ -140,5 +159,15 @@ export async function moveLane(
   await writeItem(updated);
   const board = await getBoard(projectId);
   await writeBoard(projectId, placeInLane(board, itemId, lane, index));
+  if (lane !== current.status) {
+    await emitEvent({
+      type: lane === "done" ? "item.done" : "item.moved",
+      at: now,
+      projectId,
+      itemId,
+      item: eventItem(updated),
+      data: { fromLane: current.status, toLane: lane },
+    });
+  }
   return withPriority(updated);
 }

@@ -7,6 +7,7 @@
 
 import { readdir, rename, rm } from "node:fs/promises";
 
+import { emitEvent, eventItem } from "../events";
 import { ensureDir, pathExists, readJson } from "../fsops";
 import { readItem, listItems } from "../items/io";
 import { moveLane, updateItem } from "../items/store";
@@ -55,6 +56,14 @@ export async function recordReport(
     patch.outcome = report.summary.trim();
   }
   await updateItem(projectId, itemId, patch);
+  await emitEvent({
+    type: "report.received",
+    at: report.at,
+    projectId,
+    itemId,
+    item: eventItem(current),
+    data: { agent: report.agent, reportStatus: report.status, summary: report.summary },
+  });
   if (report.status === "done" && current.status !== "done") {
     return moveLane(projectId, itemId, "done");
   }

@@ -6,6 +6,7 @@
 
 import { readdir } from "node:fs/promises";
 
+import { emitEvent } from "../events";
 import { pathExists, readJson, writeJson } from "../fsops";
 import { makeId } from "../ids";
 import { moveLane, updateItem } from "../items/store";
@@ -56,6 +57,12 @@ export async function recordHandoff(
     createdAt: now,
   };
   await writeJson(handoffPath(projectId, id), record);
+  await emitEvent({
+    type: "handoff.recorded",
+    at: now,
+    projectId,
+    data: { handoffId: id, agent, itemIds: input.itemIds, format: record.format },
+  });
   return record;
 }
 

@@ -15,7 +15,7 @@ import {
   type Status,
 } from "./schema/types";
 
-const STATUS_WEIGHT: Record<Status, number> = {
+export const STATUS_WEIGHT: Record<Status, number> = {
   development: 1.3,
   ranked: 1.0,
   idea: 0.85,
