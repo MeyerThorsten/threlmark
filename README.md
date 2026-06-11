@@ -182,6 +182,10 @@ The UI and external tools call the same store functions through these routes.
 | `GET` | `/api/flow` | portfolio flow metrics |
 | `GET` | `/api/projects/:id/insights` | decision intelligence: risk register, Monte Carlo completion forecast, decision log, outcome ledger |
 | `GET` | `/api/insights` | the same across the whole portfolio + cross-project initiative rollup |
+| `GET` | `/api/plan` | risk-aware cross-project work queue (`?limit`, `?project`, `?format=md`) |
+| `GET` | `/api/search` | global search over items, suggestions, decisions, outcomes (`?q=`) |
+| `GET` | `/api/digest` | week in review (`?days`, `?format=json\|md\|html`, `?save=1` → `~/.threlmark/digests/`) |
+| `GET` | `/api/projects/:id/snapshot` | the whole board as one self-contained read-only HTML file (`?download=1`) |
 | `GET` / `POST` `DELETE` | `/api/links` , `/api/links/:id` | dependency graph |
 | `GET` / `POST` | `/api/shared` , `/api/shared/:id/attach` | shared items |
 | `GET` | `/api/portfolio` | cross-project ranking + graph |
@@ -205,6 +209,13 @@ JSON
 - **Vertical templates & custom categories** — create a project from a vertical template (Software, Marketing & Content, Business Ops, Research & Trading, Compliance) that seeds categories, WIP limits and lane policies; or define any category list per project in ⚙ settings. Item categories are free-form strings, so an external tool's taxonomy (`"Campaigns"`, `"CAPA"`, …) round-trips intact. See [`docs/verticals.md`](docs/verticals.md).
 - **Insights (decision intelligence)** — a per-project **Insights** tab and a portfolio **/insights** view, all derived live from data the store already records: a severity-ranked **risk register** (overdue, due-soon, stale work, WIP breaches, stalled handoffs, dependency bottlenecks, idea pile-up, throughput stalls — each with a suggested action), a **Monte Carlo completion forecast** (P50/P85 from your real weekly throughput; refuses to invent a date on thin history), a **decision log**, and an **outcome ledger** of what shipped and what it produced. See [`docs/decision-intelligence.md`](docs/decision-intelligence.md).
 - **Saved views** — save the current search/category/label filter combination as a named chip on the board; one click applies it, one click clears it.
+- **MCP server (agent-native)** — `scripts/threlmark-mcp.mjs` exposes the whole board as 12 MCP tools over stdio (`list/create/update/move` items, `post_report`, suggestions in/out, `get_insights`, `get_plan`, `search`); the repo's `.mcp.json` wires it up. Anything a user can do, an agent can do — including politely proposing work via the Inbox. See [`docs/operator-loop.md`](docs/operator-loop.md).
+- **Plan my day** — `/plan` ranks every open item across all projects by status-weighted priority **plus risk boosts** (overdue, due-soon, stalled handoffs, dependency blockers, stale work), each entry with its reasons in plain language. Copy as a markdown checklist or fetch `/api/plan?format=md`.
+- **⌘K command palette** — global search over items, suggestions, decision notes and outcomes across every project, plus jump-to-anything navigation; results deep-link to the board with the item's editor already open (`?focus=<itemId>`).
+- **Webhooks & automation rules** — an optional `~/.threlmark/automations.json` delivers `item.created/moved/done`, `report.received` and `handoff.recorded` events to your endpoints (fire-and-forget, JSONL delivery log) and applies simple rules (event + lane/label match → add labels).
+- **Read-only snapshots** — **⬇ Snapshot** exports a board as one self-contained, script-free HTML file to share with anyone — no app required.
+- **Weekly digest** — `/api/digest` builds the week in review (shipped with outcomes, started, new, risks, forecast, initiatives) as JSON, markdown or HTML; `?save=1` drops dated files into `~/.threlmark/digests/`.
+- **Doctor & backup** — `npm run doctor` is a standalone store integrity checker (exit 1 on errors); `npm run backup` keeps rotating `tar.gz` archives of the data root.
 - **Labels & filters** — tag items/suggestions with free-form labels, filter a board by label, and carry labels into handoff briefs.
 - **Initiatives** — an item's `labels` are surfaced as first-class, trackable sub-roadmaps inside a project: an Initiatives strip shows each label with progress (done/total, %) and click-to-focus (it drives the existing label filter). Lets a "vNext"-style push live *inside* the real project instead of a separate one — no schema/API change, `labels` stay the storage. See [`docs/initiatives.md`](docs/initiatives.md).
 - **Bulk push by label** — filter the board by a label (or click its initiative chip), hit **Select filtered** to select every matching not-yet-shipped card, fine-tune with each card's **Select** toggle, then **Push N → Development** to move the whole batch in one go. Pair it with **Develop all** to hand the lane straight to an agent.
@@ -228,15 +239,17 @@ JSON
 
 ```
 src/lib/         fsops, paths, ids, priority, flow, metrics, activity, insights, templates,
-                 initiatives, schema/{types,version,normalize}
+                 initiatives, plan, search, digest, snapshot, events, schema/{types,version,normalize}
                  projects/ items/ board/ suggestions/ comments/ links/ shared/ stores
                  importer/{roadmap-html,trello,github}, handoff/{generate,records}, portfolio, markdown
                  __tests__/  vitest unit suite (npm test)
-src/app/         portfolio (/), insights, projects/[id] (board, flow, insights, inbox, handoff, import),
-                 import, shared, projects/new, api/** route handlers (incl. flow, insights, comments)
-src/components/  sidebar, theme-toggle, roadmap-workspace, item-editor, inbox-list, flow-panel,
-                 insights-panel, portfolio-flow, project-settings, links-manager, import-form,
-                 handoff-panel, project-nav
+src/app/         portfolio (/), insights, plan, projects/[id] (board, flow, insights, inbox, handoff,
+                 import), import, shared, projects/new, api/** route handlers (incl. flow, insights,
+                 plan, search, digest, snapshot)
+src/components/  sidebar, theme-toggle, command-palette, roadmap-workspace, item-editor, inbox-list,
+                 flow-panel, insights-panel, portfolio-flow, project-settings, links-manager,
+                 import-form, handoff-panel, project-nav, copy-button
+scripts/         threlmark-mcp.mjs (MCP server), doctor.mjs, backup.mjs, deploy-marketing.sh
 docs/            documentation (README.html, threlmark-docs.html, HOSTING.html/md)
 site/            the public Threlmark.com website (static, incl. 4-language manual)
 ```

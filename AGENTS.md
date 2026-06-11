@@ -14,4 +14,8 @@ The **Insights** layer (`src/lib/insights.ts`) is a pure read-time derivation �
 
 **Categories are free-form strings** (vertical-open): `Project.categories?: string[]` defines a project's list (else default `CATEGORIES`), and `toCategory` preserves any non-empty string — never "fix" an unknown category back to the default union, that breaks the on-disk interop contract. Vertical templates live in `src/lib/templates.ts` (pure data, applied once at `POST /api/projects` via `template`). Docs: `docs/verticals.md`.
 
+## Operator loop
+
+`src/lib/{plan,search,digest,snapshot,events}.ts` follow the same rule as Insights: pure read-time derivations (plan/search/digest/snapshot) with explicit `now` where relevant. The one exception is `events.ts`: stores call `emitEvent` after mutations (item create/move/done, report, handoff) to drive `<root>/automations.json` webhooks + label rules — `emitEvent` must NEVER throw or block (webhooks are fire-and-forget); keep that contract when adding events. The MCP server (`scripts/threlmark-mcp.mjs`, `npm run mcp`) is a thin stdio proxy over the HTTP API — add new capabilities as API routes first, then expose them as tools. CLI utilities: `npm run doctor` (read-only integrity, exit 1 on errors), `npm run backup` (rotating tgz). Docs: `docs/operator-loop.md`.
+
 Run `npm test` (vitest, `src/lib/__tests__/`) plus `npm run typecheck` and `npm run lint` before committing.

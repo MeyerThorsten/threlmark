@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Threlmark — The Operator Loop</title>
+<meta name="description" content="MCP server, plan-my-day, ⌘K palette, webhooks & rules, snapshots, weekly digest, doctor & backup — seven features that close the daily loop." />
+<style>
+  :root{
+    --ink:#f4f6f8; --surface:#fff; --soft:#eef2f7; --border:#d9dee7;
+    --text:#16181d; --strong:#0b0d12; --muted:#667085; --faint:#98a2b3;
+    --indigo:#4f46e5; --indigo-soft:#6366f1; --teal:#0f766e; --gold:#b45309; --rose:#be123c; --green:#15803d;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--ink);color:var(--text);line-height:1.6}
+  .wrap{max-width:1020px;margin:0 auto;padding:48px 26px 90px}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo);font-weight:700}
+  h1{font-size:clamp(30px,5vw,44px);color:var(--strong);letter-spacing:-.02em;line-height:1.12;margin:10px 0 14px}
+  .lede{font-size:17px;color:var(--muted);max-width:780px}
+  h2{font-size:24px;color:var(--strong);letter-spacing:-.01em;margin:64px 0 6px}
+  h3{font-size:16px;color:var(--strong);margin:20px 0 6px}
+  p{margin:10px 0}
+  .sub{color:var(--muted);font-size:14.5px;margin-bottom:20px}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 10px 26px rgba(15,23,42,.06)}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:840px){.g2,.g3{grid-template-columns:1fr}}
+  code,.mono{font-family:var(--mono);font-size:.92em}
+  code{background:var(--soft);border:1px solid var(--border);border-radius:6px;padding:1px 6px}
+  pre{background:#0f172a;color:#dbe4ef;border-radius:12px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.6;margin:14px 0}
+  pre code{background:none;border:0;padding:0;color:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+  th{text-align:left;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:8px 10px;border-bottom:2px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid var(--soft);vertical-align:top}
+  .pillar .num{font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:700}
+  .pillar h3{margin:6px 0 4px;font-size:15px}
+  .pillar p{font-size:13px;color:var(--muted);margin:0}
+  .loop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:12.5px;margin:16px 0}
+  .node{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 13px;color:var(--strong);font-weight:600}
+  .node.agent{border-color:var(--indigo);color:var(--indigo)}
+  .node.auto{border-color:var(--teal);color:var(--teal)}
+  .sep{color:var(--faint)}
+  .callout{border-left:4px solid var(--indigo);background:var(--surface);border-radius:0 12px 12px 0;padding:14px 18px;margin:18px 0;font-size:14px}
+  .callout.green{border-color:var(--green)}
+  .score{font-family:var(--mono);font-size:13px;line-height:2}
+  .score b{color:var(--indigo)}
+  .reason{color:var(--teal);font-size:13px}
+  .qrow{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--soft);padding:9px 2px;font-size:13.5px}
+  .qrow .n{font-family:var(--mono);font-weight:800;color:var(--faint);width:18px}
+  .qrow .t{font-weight:600;color:var(--strong);flex:1}
+  .qrow .s{font-family:var(--mono);font-weight:800;color:var(--indigo)}
+  a{color:var(--indigo)}
+  footer{margin-top:70px;font-size:12.5px;color:var(--faint);border-top:1px solid var(--border);padding-top:18px}
+  .kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;background:var(--surface);padding:1px 7px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">Threlmark · feature deep-dive · 2026-06</div>
+  <h1>The operator loop,<br/>closed</h1>
+  <p class="lede">Seven features that turn Threlmark from a board you look at into a loop that runs: agents work the board through <b>native MCP tools</b>, your day starts from a <b>risk-decided plan</b>, every event can <b>trigger the outside world</b>, the roadmap <b>travels as one file</b>, and the week <b>reviews itself</b> — on a store that can check and back itself up.</p>
+
+  <div class="loop">
+    <span class="node">get_plan</span><span class="sep">→</span>
+    <span class="node agent">agent builds</span><span class="sep">→</span>
+    <span class="node agent">post_report done</span><span class="sep">→</span>
+    <span class="node">card → Done + outcome</span><span class="sep">→</span>
+    <span class="node auto">webhook fires</span><span class="sep">→</span>
+    <span class="node">weekly digest</span><span class="sep">↺</span>
+  </div>
+
+  <div class="grid g3" style="margin-top:26px">
+    <div class="panel pillar"><span class="num">01</span><h3>MCP server</h3><p>12 tools over stdio — the whole board, agent-native.</p></div>
+    <div class="panel pillar"><span class="num">02</span><h3>Plan my day</h3><p>One queue, risk-boosted, every entry argues its case.</p></div>
+    <div class="panel pillar"><span class="num">03</span><h3>⌘K palette</h3><p>Search items, decisions, outcomes — land with the editor open.</p></div>
+    <div class="panel pillar"><span class="num">04</span><h3>Webhooks &amp; rules</h3><p>automations.json: events out, labels applied, all logged.</p></div>
+    <div class="panel pillar"><span class="num">05</span><h3>Snapshots</h3><p>The board as one self-contained, script-free HTML file.</p></div>
+    <div class="panel pillar"><span class="num">06</span><h3>Weekly digest</h3><p>Shipped · started · risks · forecast, as md + html.</p></div>
+  </div>
+  <div class="grid g3" style="margin-top:14px">
+    <div class="panel pillar"><span class="num">07</span><h3>Doctor &amp; backup</h3><p>Integrity checks with exit codes; rotating tgz archives.</p></div>
+    <div class="panel pillar" style="border-style:dashed"><span class="num">⌘K</span><h3>Everywhere</h3><p><span class="kbd">⌘</span> + <span class="kbd">K</span> on any page — or the sidebar button.</p></div>
+    <div class="panel pillar" style="border-style:dashed"><span class="num">API</span><h3>Agent-readable</h3><p>/api/plan · /api/search · /api/digest · /api/…/snapshot</p></div>
+  </div>
+
+  <h2>MCP: anything you can do, an agent can do</h2>
+  <p class="sub">A stdio server proxying the local HTTP API — every tool call shares the UI's normalization, board reconciliation and event emission. Ships preconfigured in the repo's <code>.mcp.json</code>.</p>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Read</th><th>Write</th><th>Decide</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">list_projects<br/>list_items<br/>list_suggestions</td>
+          <td class="mono">create_item · update_item<br/>move_item · post_report<br/>create_suggestion · accept_suggestion</td>
+          <td class="mono">get_plan<br/>get_insights<br/>search</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout" style="margin-bottom:0"><b>The polite agent pattern.</b> An agent that wants to propose work calls <code>create_suggestion</code> — it lands in the Inbox for a human to accept or dismiss — instead of silently adding items. The loop stays human-steered.</div>
+  </div>
+
+  <h2>Plan my day: a queue that argues its case</h2>
+  <p class="sub">Priority × status weight, plus risk boosts — the same primitives as the Insights risk register, so the plan and the register can never disagree.</p>
+  <div class="grid g2">
+    <div class="panel">
+      <h3 style="margin-top:0">Scoring</h3>
+      <div class="score">
+        score = priority × status-weight<br/>
+        &nbsp;&nbsp;+ <b>12</b> overdue&nbsp;&nbsp;+ <b>6</b> due ≤ 3 days<br/>
+        &nbsp;&nbsp;+ <b>8</b> stalled handoff&nbsp;&nbsp;+ <b>4</b> × items it blocks<br/>
+        &nbsp;&nbsp;+ <b>5</b> stale in Development
+      </div>
+      <p class="reason" style="margin-top:10px">→ every boost is also a human reason: "overdue since 2026-06-01", "blocks 2 other items", "finishing beats starting".</p>
+    </div>
+    <div class="panel">
+      <h3 style="margin-top:0">A real morning (live data)</h3>
+      <div class="qrow"><span class="n">1</span><span class="t">Remove the committed SSH private key…</span><span class="s">42</span></div>
+      <div class="qrow"><span class="n">2</span><span class="t">Surface scraper success/fallback/block metrics…</span><span class="s">41.4</span></div>
+      <div class="qrow"><span class="n">3</span><span class="t">Build an ASB-derived prompt-injection battery…</span><span class="s">40.3</span></div>
+      <p class="reason" style="margin-top:8px">→ a security risk outranked everything. That's the point.</p>
+    </div>
+  </div>
+
+  <h2>Webhooks &amp; rules: one file, whole contract</h2>
+  <div class="panel">
+<pre style="margin-top:0"><code>// ~/.threlmark/automations.json
+{
+  "webhooks": [
+    { "url": "https://example.test/hook", "events": ["item.done", "report.received"] }
+  ],
+  "rules": [
+    { "on": "item.moved", "toLane": "development", "addLabels": ["wip"] }
+  ]
+}</code></pre>
+    <table>
+      <thead><tr><th>Events</th><th>Guarantees</th></tr></thead>
+      <tbody><tr>
+        <td class="mono">item.created · item.moved · item.done<br/>report.received · handoff.recorded</td>
+        <td>fire-and-forget (3s timeout) — slow endpoints never slow the board · every attempt logged to <code>events.log</code> (JSONL) · automations can never break a mutation</td>
+      </tr></tbody>
+    </table>
+  </div>
+
+  <h2>Snapshots &amp; the weekly digest</h2>
+  <div class="grid g2">
+    <div class="panel">
+      <h3 style="margin-top:0">⬇ Snapshot</h3>
+      <p style="font-size:13.5px">The whole board — four lanes, priorities, labels, initiative bars — as <b>one self-contained HTML file</b>. No scripts, no external requests; verified by test. Email it, attach it, host it. <code>GET /api/projects/:id/snapshot</code></p>
+    </div>
+    <div class="panel">
+      <h3 style="margin-top:0">Week in review</h3>
+      <p style="font-size:13.5px">Shipped (with outcomes + agent attribution), started, new items, current risks, forecast, open initiatives — reconstructed from item history, no bookkeeping. <code>?format=html|md</code> · <code>?days=30</code> · <code>?save=1</code> drops dated files into <code>~/.threlmark/digests/</code> for cron.</p>
+    </div>
+  </div>
+
+  <h2>Doctor &amp; backup: the local-first promise, kept</h2>
+  <div class="panel">
+<pre style="margin-top:0"><code>$ npm run doctor
+✖ ERROR  projects/readiness/items/178109…json
+         projectId "Readiness" does not match owning project "readiness"
+12 errors · 0 warnings · 0 info        # exit code 1 → cron/CI-friendly
+
+$ npm run backup
+✓ ~/.threlmark/backups/threlmark-2026-06-11T04-43-12.tgz (411 KB)
+1 backup(s) kept</code></pre>
+    <div class="callout green" style="margin-bottom:0"><b>It earned its keep on day one.</b> The doctor's first run against the real store found 12 items whose <code>projectId</code> had been written with the wrong casing by an external tool — invisible at runtime (reads normalize it away), wrong on disk. Found and fixed the same hour. Restores are just <code>tar -xzf</code>: the store is plain files.</div>
+  </div>
+
+  <h2>Where it lives</h2>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Piece</th><th>Path</th></tr></thead>
+      <tbody>
+        <tr><td>MCP server + config</td><td class="mono">scripts/threlmark-mcp.mjs · .mcp.json · npm run mcp</td></tr>
+        <tr><td>Domain (pure, tested)</td><td class="mono">src/lib/{plan,search,digest,snapshot,events}.ts</td></tr>
+        <tr><td>API</td><td class="mono">/api/plan · /api/search · /api/digest · /api/projects/[id]/snapshot</td></tr>
+        <tr><td>UI</td><td class="mono">/plan · ⌘K palette (global) · ⬇ Snapshot button · /insights digest panel</td></tr>
+        <tr><td>CLI</td><td class="mono">scripts/doctor.mjs · scripts/backup.mjs</td></tr>
+        <tr><td>Tests (48 total)</td><td class="mono">src/lib/__tests__/{operator,doctor}.test.ts + live E2E (MCP stdio, webhook round-trip)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>Threlmark · the operator loop · built, tested and tracked in Threlmark itself (initiative <span class="mono">operator-loop</span>) · © 2026 Thorsten Meyer</footer>
+</div>
+</body>
+</html>
