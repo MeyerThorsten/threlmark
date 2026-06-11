@@ -41,6 +41,12 @@ export function Sidebar({ projects }: { projects: NavProject[] }) {
         <span>◈ Insights</span>
       </Link>
       <Link
+        href="/plan"
+        className={`nav-link ${pathname === "/plan" ? "active" : ""}`}
+      >
+        <span>▸ Plan my day</span>
+      </Link>
+      <Link
         href="/import"
         className={`nav-link ${pathname === "/import" ? "active" : ""}`}
       >
@@ -91,6 +97,17 @@ export function Sidebar({ projects }: { projects: NavProject[] }) {
       <div className="spacer" />
       <div className="sidebar-actions">
         <ThemeToggle />
+        <button
+          type="button"
+          className="btn btn-sm"
+          title="Command palette — search & jump anywhere"
+          aria-label="Open command palette"
+          onClick={() =>
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))
+          }
+        >
+          ⌘K
+        </button>
         <Link href="/projects/new" className="btn btn-sm" style={{ justifyContent: "center", flex: 1 }}>
           + New project
         </Link>

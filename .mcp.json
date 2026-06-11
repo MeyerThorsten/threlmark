@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "threlmark": {
+      "command": "node",
+      "args": ["scripts/threlmark-mcp.mjs"],
+      "env": { "THRELMARK_URL": "http://localhost:4789" }
+    }
+  }
+}

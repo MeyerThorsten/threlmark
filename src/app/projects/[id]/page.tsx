@@ -13,10 +13,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectBoardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const focusItemId = typeof sp.focus === "string" ? sp.focus : undefined;
   const project = await getProject(id);
   if (!project) notFound();
 
@@ -51,6 +55,15 @@ export default async function ProjectBoardPage({
             <DevelopAllButton projectId={id} devCount={metrics.development} />
             <Link href={`/projects/${id}/handoff`} className="btn btn-sm">⇥ Handoff brief</Link>
             <Link href={`/projects/${id}/import`} className="btn btn-sm">↧ Import</Link>
+            <a
+              href={`/api/projects/${id}/snapshot`}
+              target="_blank"
+              rel="noopener"
+              className="btn btn-sm"
+              title="Read-only board snapshot — one self-contained HTML file to share"
+            >
+              ⬇ Snapshot
+            </a>
             <RemoveProjectButton projectId={id} projectName={project.name} />
           </div>
         </div>
@@ -76,6 +89,7 @@ export default async function ProjectBoardPage({
         lanePolicies={project.lanePolicies ?? {}}
         projectCategories={project.categories}
         initialSavedViews={project.savedViews ?? []}
+        focusItemId={focusItemId}
       />
     </>
   );

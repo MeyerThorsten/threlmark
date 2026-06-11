@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CommandPalette } from "@/components/command-palette";
 import { Sidebar } from "@/components/sidebar";
 import { listProjects } from "@/lib/projects/store";
 import { listItems } from "@/lib/items/io";
@@ -42,6 +43,7 @@ export default async function RootLayout({
       </head>
       <body>
         <div className="shell">
+          <CommandPalette projects={nav.map((p) => ({ id: p.id, name: p.name }))} />
           <Sidebar projects={nav} />
           <div className="main-col">
             <main className="main">{children}</main>

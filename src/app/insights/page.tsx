@@ -72,6 +72,21 @@ export default async function PortfolioInsightsPage() {
 
         <OutcomeLedger outcomes={insights.outcomes} showProject limit={16} />
 
+        <div className="panel" style={{ padding: 18 }}>
+          <h3 style={{ fontSize: 15, marginBottom: 4 }}>Week in review</h3>
+          <p className="muted" style={{ fontSize: 12.5, marginTop: 0, marginBottom: 12 }}>
+            Shipped, started, new items, risks and forecast for the last 7 days — generated on demand from item history.
+          </p>
+          <div className="toolbar">
+            <a className="btn btn-sm" href="/api/digest?format=html" target="_blank" rel="noopener">Open digest</a>
+            <a className="btn btn-sm" href="/api/digest?format=md" target="_blank" rel="noopener">Markdown</a>
+            <a className="btn btn-sm" href="/api/digest?format=html&days=30" target="_blank" rel="noopener">Last 30 days</a>
+            <span className="muted" style={{ fontSize: 12, alignSelf: "center" }}>
+              <code style={{ fontFamily: "var(--font-mono)" }}>/api/digest?save=1</code> drops dated md+html into <code style={{ fontFamily: "var(--font-mono)" }}>~/.threlmark/digests/</code>
+            </span>
+          </div>
+        </div>
+
         <p className="muted" style={{ fontSize: 12 }}>
           Also available per project — open any project and use its <b>Insights</b> tab.
           Agent-readable at <code style={{ fontFamily: "var(--font-mono)" }}>/api/insights</code>.{" "}

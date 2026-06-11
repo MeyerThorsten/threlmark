@@ -87,6 +87,7 @@ export function RoadmapWorkspace({
   lanePolicies = {},
   projectCategories,
   initialSavedViews = [],
+  focusItemId,
 }: {
   projectId: string;
   projectName: string;
@@ -98,6 +99,8 @@ export function RoadmapWorkspace({
   lanePolicies?: Partial<Record<Lane, string>>;
   projectCategories?: string[];
   initialSavedViews?: SavedView[];
+  /** Deep-link (?focus=<itemId>): open this item's editor on mount. */
+  focusItemId?: string;
 }) {
   const router = useRouter();
   const [items, setItems] = useState<Record<string, RoadmapItemView>>(() =>
@@ -127,6 +130,17 @@ export function RoadmapWorkspace({
     const t = setTimeout(() => setBaseUrl(window.location.origin), 0);
     return () => clearTimeout(t);
   }, []);
+
+  // Deep-link from search/plan: open the focused item's editor once.
+  const focusedOnce = useRef(false);
+  useEffect(() => {
+    if (!focusItemId || focusedOnce.current) return;
+    const item = items[focusItemId];
+    if (!item) return;
+    focusedOnce.current = true;
+    const t = setTimeout(() => setEditing(item), 0);
+    return () => clearTimeout(t);
+  }, [focusItemId, items]);
 
   // Poll for agent reports → toast + auto-move done cards (no manual step).
   const reportSeen = useRef<string>("");
